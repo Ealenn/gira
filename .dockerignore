@@ -1,0 +1,6 @@
+./*.md
+Dockerfile
+version.json
+.editorconfig
+.dockerignore
+.gitignore
