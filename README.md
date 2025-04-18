@@ -1,6 +1,10 @@
 # 🦒 Gira — Git & Jira CLI Tool
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ealenn/gira?logo=github&style=for-the-badge)
+[![GitHub stars](https://img.shields.io/github/stars/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/issues)
+[![Github download](https://img.shields.io/github/downloads/ealenn/gira/total?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/releases)
+[![DockerHub](https://img.shields.io/docker/pulls/ealen/gira.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/repository/docker/ealen/gira)
+[![License](https://img.shields.io/github/license/ealenn/gira?style=for-the-badge&logo=opensourceinitiative)](https://github.com/Ealenn/gira?tab=GPL-3.0-1-ov-file)
 
 Gira is a simple and powerful command-line tool that bridges your Git workflow with Jira. It helps you automate common tasks like creating branches from Jira issues, and updating or closing issues — all from your terminal.
 
@@ -8,9 +12,9 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
 
 - [🦒 Gira — Git \& Jira CLI Tool](#-gira--git--jira-cli-tool)
   - [📦 Installation](#-installation)
-    - [✅ From Source (Download the Binary)](#-from-source-download-the-binary)
+    - [⚙️ From Source (Download the Binary)](#️-from-source-download-the-binary)
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
-    - [✨ Optional: Shell Autocompletion](#-optional-shell-autocompletion)
+  - [✨ Shell Autocompletion](#-shell-autocompletion)
   - [🚀 Usage](#-usage)
     - [🌱 branch: Creating a Branch from Jira](#-branch-creating-a-branch-from-jira)
 
@@ -18,12 +22,13 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
 
 You can use Gira either as a native binary or through Docker. Choose what fits your environment best.
 
-### ✅ From Source (Download the Binary)
+### ⚙️ From Source (Download the Binary)
 
 You can download the latest release directly from GitHub:
 
 ```sh
-curl -sSL https://github.com/Ealenn/gira/releases/latest/download/gira -o /usr/local/bin/gira && chmod +x /usr/local/bin/gira
+curl -sSL https://github.com/Ealenn/gira/releases/latest/download/gira-linux-amd64 -o /usr/local/bin/gira 
+chmod +x /usr/local/bin/gira
 ```
 
 > This will place the gira binary in your system path for global use.
@@ -45,7 +50,7 @@ alias gira='docker run --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gira'
 
 After reloading your shell, you'll be able to run gira from anywhere.
 
-### ✨ Optional: Shell Autocompletion
+## ✨ Shell Autocompletion
 
 Gira supports autocompletion for major shells like Bash, Zsh, Fish, and PowerShell.
 

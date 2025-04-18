@@ -12,7 +12,7 @@ import (
 	Services "gira/services"
 )
 
-func CmdBranch(configuration *Configuration.Configuration, loggerService *Services.LoggerService, issueId string) {
+func CmdBranch(configuration *Configuration.Configuration, loggerService *Services.LoggerService, issueId string, assignIssue bool) {
 	if !configuration.IsValid() {
 		UI.ConfigurationError(configuration.Path)
 	}
@@ -36,6 +36,18 @@ func CmdBranch(configuration *Configuration.Configuration, loggerService *Servic
 	bufio.NewReader(os.Stdin).ReadLine()
 
 	gitService.CreateBranch(branchName)
+
+	if assignIssue {
+		if jiraUserAccount, jiraUserAccountError := jiraService.GetMyself(); jiraUserAccountError == nil {
+			if assignError := jiraService.AssignIssueTo(issueId, jiraUserAccount.AccountID); assignError != nil {
+				loggerService.Info("Unable to assign issue %s due to %v", issueId, assignError)
+			} else {
+				loggerService.Info("Jira %s has been assigned to %s", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(jiraUserAccount.DisplayName))
+			}
+		} else {
+			loggerService.Info("Unable to fetch Jira account due to %v", jiraUserAccountError)
+		}
+	}
 }
 
 func getBranchType(issueTypeName string) string {

@@ -42,3 +42,18 @@ func (jiraService *JiraService) GetIssue(issueKeyId string) (*models.IssueScheme
 
 	return issue, response
 }
+
+func (jiraService *JiraService) GetMyself() (*models.UserScheme, error) {
+	user, _, userError := jiraService.Client.MySelf.Details(context.Background(), nil)
+	if userError != nil {
+		return nil, userError
+	}
+	return user, nil
+}
+
+func (jiraService *JiraService) AssignIssueTo(issueKeyId string, accountId string) error {
+	if _, assignError := jiraService.Client.Issue.Assign(context.Background(), issueKeyId, accountId); assignError != nil {
+		return assignError
+	}
+	return nil
+}

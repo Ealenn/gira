@@ -89,6 +89,7 @@ jobs:
 
       - 
         name: Docker Hub Description
+        if: success() && github.event_name != 'pull_request'
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}

@@ -14,7 +14,12 @@ func main() {
 	logger := Services.NewLoggerService(Services.INFO)
 	configuration := configuration.New()
 
-	rootCmd.AddCommand(&cobra.Command{
+	/* ----------------------
+	 * Branch
+	 * ----------------------
+	 */
+	var branchCommandAssignIssueFlag bool
+	var branchCommand = &cobra.Command{
 		Use:   "branch [Jira Issue ID]",
 		Short: "Create a new Git branch using Jira issue ID.",
 		Long: `
@@ -24,9 +29,11 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		`,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			CMD.CmdBranch(configuration, logger, args[0])
+			CMD.CmdBranch(configuration, logger, args[0], branchCommandAssignIssueFlag)
 		},
-	})
+	}
+	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assignIssue", "a", false, "assign the issue to the currently logged-in Jira user after creating the Git branch")
+	rootCmd.AddCommand(branchCommand)
 
 	rootCmd.Execute()
 }
