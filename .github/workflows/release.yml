@@ -26,7 +26,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        build_flags: '-s -w'
         asset_name: gira-${{ matrix.goos }}-${{ matrix.goarch }}
         compress_assets: OFF
         extra_files: LICENSE README.md
