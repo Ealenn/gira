@@ -38,14 +38,10 @@ func CmdBranch(configuration *Configuration.Configuration, loggerService *Servic
 	gitService.CreateBranch(branchName)
 
 	if assignIssue {
-		if jiraUserAccount, jiraUserAccountError := jiraService.GetMyself(); jiraUserAccountError == nil {
-			if assignError := jiraService.AssignIssueTo(issueId, jiraUserAccount.AccountID); assignError != nil {
-				loggerService.Info("Unable to assign issue %s due to %v", issueId, assignError)
-			} else {
-				loggerService.Info("Jira %s has been assigned to %s", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(jiraUserAccount.DisplayName))
-			}
+		if assignError := jiraService.AssignIssueTo(issueId, configuration.JSON.JiraAccountID); assignError != nil {
+			loggerService.Info("Unable to assign issue %s due to : %v", issueId, assignError)
 		} else {
-			loggerService.Info("Unable to fetch Jira account due to %v", jiraUserAccountError)
+			loggerService.Info("Jira %s has been assigned to %s", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(configuration.JSON.JiraAccountID))
 		}
 	}
 }
