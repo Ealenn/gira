@@ -16,8 +16,9 @@ type Configuration struct {
 }
 
 type JSONConfiguration struct {
-	JiraHost  string `json:"JiraHost"`
-	JiraToken string `json:"JiraToken"`
+	JiraHost      string `json:"JiraHost"`
+	JiraToken     string `json:"JiraToken"`
+	JiraAccountID string `json:"JiraAccountID"`
 }
 
 func New() *Configuration {
@@ -30,8 +31,9 @@ func New() *Configuration {
 	if _, statError := os.Stat(configurationFilePath); statError != nil {
 		configuration, createConfigurationError := createConfiguration(Configuration{
 			JSON: JSONConfiguration{
-				JiraHost:  "",
-				JiraToken: "",
+				JiraHost:      "",
+				JiraToken:     "",
+				JiraAccountID: "",
 			},
 			Path:    configurationFilePath,
 			isDebug: os.Getenv("DEBUG") == "TRUE",
@@ -50,8 +52,9 @@ func New() *Configuration {
 
 	return &Configuration{
 		JSON: JSONConfiguration{
-			JiraHost:  fileContent.JSON.JiraHost,
-			JiraToken: fileContent.JSON.JiraToken,
+			JiraHost:      fileContent.JSON.JiraHost,
+			JiraToken:     fileContent.JSON.JiraToken,
+			JiraAccountID: fileContent.JSON.JiraAccountID,
 		},
 		Path:    configurationFilePath,
 		isDebug: os.Getenv("DEBUG") == "TRUE",
@@ -69,6 +72,10 @@ func (configuration *Configuration) IsValid() bool {
 	}
 
 	if len(configuration.JSON.JiraToken) < 5 {
+		return false
+	}
+
+	if len(configuration.JSON.JiraAccountID) < 5 {
 		return false
 	}
 
