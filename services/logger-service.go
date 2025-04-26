@@ -19,6 +19,9 @@ type LoggerService struct {
 }
 
 func NewLoggerService(level Level) *LoggerService {
+	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
+		level = DEBUG
+	}
 	return &LoggerService{Level: level}
 }
 

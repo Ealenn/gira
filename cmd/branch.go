@@ -38,10 +38,11 @@ func CmdBranch(configuration *Configuration.Configuration, loggerService *Servic
 	gitService.CreateBranch(branchName)
 
 	if assignIssue {
-		if assignError := jiraService.AssignIssueTo(issueId, configuration.JSON.JiraAccountID); assignError != nil {
-			loggerService.Info("Unable to assign issue %s due to : %v", issueId, assignError)
+		if assignError := jiraService.AssignIssue(issueId); assignError != nil {
+			loggerService.Debug("%v", assignError)
+			loggerService.Info("Unable to assign issue %s to %s...", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(configuration.JSON.JiraUserKey))
 		} else {
-			loggerService.Info("Jira %s has been assigned to %s", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(configuration.JSON.JiraAccountID))
+			loggerService.Info("Jira %s has been assigned to %s", UI.InfoStyle.Render(issueId), UI.InfoStyle.Render(configuration.JSON.JiraUserKey))
 		}
 	}
 }

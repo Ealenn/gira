@@ -19,6 +19,8 @@ type JSONConfiguration struct {
 	JiraHost      string `json:"JiraHost"`
 	JiraToken     string `json:"JiraToken"`
 	JiraAccountID string `json:"JiraAccountID"`
+	JiraEmail     string `json:"JiraEmail"`
+	JiraUserKey   string `json:"JiraUserKey"`
 }
 
 func New() *Configuration {
@@ -34,6 +36,8 @@ func New() *Configuration {
 				JiraHost:      "",
 				JiraToken:     "",
 				JiraAccountID: "",
+				JiraEmail:     "",
+				JiraUserKey:   "",
 			},
 			Path:    configurationFilePath,
 			isDebug: os.Getenv("DEBUG") == "TRUE",
@@ -55,10 +59,16 @@ func New() *Configuration {
 			JiraHost:      fileContent.JSON.JiraHost,
 			JiraToken:     fileContent.JSON.JiraToken,
 			JiraAccountID: fileContent.JSON.JiraAccountID,
+			JiraEmail:     fileContent.JSON.JiraEmail,
+			JiraUserKey:   fileContent.JSON.JiraUserKey,
 		},
 		Path:    configurationFilePath,
 		isDebug: os.Getenv("DEBUG") == "TRUE",
 	}
+}
+
+func (configuration *Configuration) Update() {
+	createConfiguration(*configuration)
 }
 
 func (configuration *Configuration) IsValid() bool {
@@ -71,11 +81,15 @@ func (configuration *Configuration) IsValid() bool {
 		return false
 	}
 
-	if len(configuration.JSON.JiraToken) < 5 {
+	if len(configuration.JSON.JiraToken) < 2 {
 		return false
 	}
 
-	if len(configuration.JSON.JiraAccountID) < 5 {
+	if len(configuration.JSON.JiraEmail) < 2 {
+		return false
+	}
+
+	if len(configuration.JSON.JiraUserKey) < 2 {
 		return false
 	}
 
