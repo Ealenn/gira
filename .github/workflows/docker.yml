@@ -8,6 +8,7 @@ on:
   push:
     branches: 
       - master
+      - develop
     tags:
       - '*'
 
@@ -27,9 +28,9 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
             type=raw,value=develop,enable=${{ github.ref == format('refs/heads/{0}', 'develop') }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},enable=${{ github.ref_type == 'tag' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ github.ref_type == 'tag' }}
+            type=semver,pattern={{major}},enable=${{ github.ref_type == 'tag' }}
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
