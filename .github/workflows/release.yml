@@ -23,6 +23,10 @@ jobs:
             goos: windows
     steps:
     - uses: actions/checkout@v4
+
+    - name: 'Version'
+      run: echo "${{ github.event.release.name }}" > configuration/version.txt
+
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -30,4 +34,3 @@ jobs:
         goarch: ${{ matrix.goarch }}
         asset_name: gira-${{ matrix.goos }}-${{ matrix.goarch }}
         compress_assets: OFF
-        extra_files: LICENSE README.md

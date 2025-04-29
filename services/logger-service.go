@@ -2,9 +2,25 @@ package services
 
 import (
 	"fmt"
-	UI "gira/ui"
 	"os"
+
+	"github.com/charmbracelet/lipgloss"
 )
+
+var ErrorStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#e74c3c"))
+
+var DebugStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#95a5a6"))
+
+var InfoStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#3498db"))
+
+var CodeStyle = lipgloss.NewStyle().
+	Bold(true).Foreground(lipgloss.Color("#2980b9"))
 
 type Level int8
 
@@ -27,29 +43,49 @@ func NewLoggerService(level Level) *LoggerService {
 
 func (logger *LoggerService) Debug(format string, args ...any) {
 	if logger.Level <= DEBUG {
-		fmt.Print(UI.DebugStyle.Render("[DEBUG] "))
-		fmt.Printf(format, args...)
-		fmt.Print("\n")
+		fmt.Print(DebugStyle.Render("[DEBUG] "))
+		write(DebugStyle, format, args...)
 	}
 }
 
 func (logger *LoggerService) Info(format string, args ...any) {
 	if logger.Level <= DEBUG {
-		fmt.Print(UI.InfoStyle.Render("[INFO] "))
+		fmt.Print(InfoStyle.Render("[INFO] "))
 	}
 
 	if logger.Level <= INFO {
-		fmt.Printf(format, args...)
-		fmt.Print("\n")
+		write(InfoStyle, format, args...)
 	}
 }
 
 func (logger *LoggerService) Fatal(format string, args ...any) {
 	if logger.Level <= DEBUG {
-		fmt.Print(UI.ErrorStyle.Render("[FATAL] "))
+		fmt.Print(ErrorStyle.Render("[FATAL] "))
 	}
 
-	fmt.Printf(format, args...)
-	fmt.Print("\n")
+	write(ErrorStyle, format, args...)
 	os.Exit(0)
+}
+
+func renderArgs(style lipgloss.Style, args ...any) []any {
+	renderedArgs := make([]any, len(args))
+	for i, arg := range args {
+		if stringArg, isString := arg.(string); isString {
+			renderedArgs[i] = style.Render(stringArg)
+		} else {
+			renderedArgs[i] = arg
+		}
+	}
+
+	return renderedArgs
+}
+
+func write(style lipgloss.Style, format string, args ...any) {
+	if len(args) == 0 {
+		fmt.Println(format)
+	} else {
+		renderedArgs := renderArgs(style, args...)
+		message := fmt.Sprintf(format, renderedArgs...)
+		fmt.Println(message)
+	}
 }

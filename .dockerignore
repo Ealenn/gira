@@ -1,6 +1,10 @@
 ./*.md
+./.github/*
+LICENSE
 Dockerfile
 version.json
 .editorconfig
 .dockerignore
 .gitignore
+install_linux.sh
+install_windows.ps1

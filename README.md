@@ -1,9 +1,9 @@
 # 🦒 Gira — Git & Jira CLI Tool
 
-[![GitHub stars](https://img.shields.io/github/stars/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/issues)
-[![Github download](https://img.shields.io/github/downloads/ealenn/gira/total?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/releases)
-[![DockerHub](https://img.shields.io/docker/pulls/ealen/gira.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/repository/docker/ealen/gira)
+[![GitHub stars](https://img.shields.io/github/stars/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/stargazers) 
+[![GitHub issues](https://img.shields.io/github/issues/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/issues) 
+[![Github download](https://img.shields.io/github/downloads/ealenn/gira/total?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/releases) 
+[![DockerHub](https://img.shields.io/docker/pulls/ealen/gira.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/repository/docker/ealen/gira) 
 [![License](https://img.shields.io/github/license/ealenn/gira?style=for-the-badge&logo=opensourceinitiative)](https://github.com/Ealenn/gira?tab=GPL-3.0-1-ov-file)
 
 Gira is a simple and powerful command-line tool that bridges your Git workflow with Jira. It helps you automate common tasks like creating branches from Jira issues, and updating or closing issues — all from your terminal.
@@ -12,8 +12,10 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
 
 - [🦒 Gira — Git \& Jira CLI Tool](#-gira--git--jira-cli-tool)
   - [📦 Installation](#-installation)
+    - [🔧 Automatic](#-automatic)
+      - [🐧 Linux / MacOS](#-linux--macos)
+      - [🪟 Windows](#-windows)
     - [👉 Manual (Download the Binary)](#-manual-download-the-binary)
-    - [🔧 From Source](#-from-source)
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
   - [✨ Shell Autocompletion](#-shell-autocompletion)
   - [🚀 Usage](#-usage)
@@ -26,6 +28,24 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
 
 You can use Gira either as a native binary or through Docker. Choose what fits your environment best.
 
+### 🔧 Automatic
+
+Automated install/update, don't forget to always verify what you're piping into bash.
+
+The script installs downloaded binary to HOME directory by default, but it can be changed by setting DIR environment variable.
+
+#### 🐧 Linux / MacOS
+
+```sh
+curl https://raw.githubusercontent.com/Ealenn/gira/master/install_linux.sh | bash
+```
+
+#### 🪟 Windows
+
+```sh
+Invoke-RestMethod https://raw.githubusercontent.com/Ealenn/gira/master/install_windows.ps1 | Invoke-Expression
+```
+
 ### 👉 Manual (Download the Binary)
 
 |Platform|Download Link|Hash|
@@ -37,8 +57,6 @@ You can use Gira either as a native binary or through Docker. Choose what fits y
 |Linux (ARM64)|[gira-linux-arm64](https://github.com/Ealenn/gira/releases/latest/download/gira-linux-arm64)|[md5](https://github.com/Ealenn/gira/releases/latest/download/gira-linux-arm64.md5)|
 |Windows (x86)|[gira-windows-386.exe](https://github.com/Ealenn/gira/releases/latest/download/gira-windows-386.exe)|[md5](https://github.com/Ealenn/gira/releases/latest/download/gira-windows-386.exe.md5)|
 |Windows (AMD64)|[gira-windows-amd64.exe](https://github.com/Ealenn/gira/releases/latest/download/gira-windows-amd64.exe)|[md5](https://github.com/Ealenn/gira/releases/latest/download/gira-windows-amd64.exe.md5)|
-
-### 🔧 From Source
 
 You can download the latest release directly from GitHub:
 
@@ -98,9 +116,11 @@ Available Commands:
   configure   Configure Gira with Jira account and API token
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  version     Display the current Gira version and check for available updates
 
 Flags:
-  -h, --help   help for gira
+  -h, --help      help for gira
+  -v, --version   version for gira
 
 Use "gira [command] --help" for more information about a command.
 ```
@@ -139,14 +159,21 @@ This helps enforce consistent naming conventions and improve traceability betwee
 Usage:
   gira branch [Jira Issue ID] [flags]
 
+Examples:
+gira branch ISSUE-123
+gira branch -a ISSUE-123
+
+Aliases:
+  branch, checkout
+
 Flags:
   -a, --assignIssue   assign the issue to the currently logged-in Jira user after creating the Git branch
   -h, --help          help for branch
 ```
 
-#### Example 
+#### Example
 ```
-❯ gira branch TICKET-123
-Branch feature/TICKET-123/update-app-dependencies-to-the-latest-version will be generated
+❯ gira branch ISSUE-123
+Branch feature/ISSUE-123/update-app-dependencies-to-the-latest-version will be generated
 Press ENTER to continue, CTRL+C to cancel
 ```

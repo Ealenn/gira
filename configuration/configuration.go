@@ -1,13 +1,19 @@
 package configuration
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
+
+//go:embed version.txt
+var currentVersion string
 
 type Configuration struct {
 	JSON    JSONConfiguration
@@ -16,11 +22,12 @@ type Configuration struct {
 }
 
 type JSONConfiguration struct {
-	JiraHost      string `json:"JiraHost"`
-	JiraToken     string `json:"JiraToken"`
-	JiraAccountID string `json:"JiraAccountID"`
-	JiraEmail     string `json:"JiraEmail"`
-	JiraUserKey   string `json:"JiraUserKey"`
+	JiraHost             string `json:"JiraHost"`
+	JiraToken            string `json:"JiraToken"`
+	JiraAccountID        string `json:"JiraAccountID"`
+	JiraEmail            string `json:"JiraEmail"`
+	JiraUserKey          string `json:"JiraUserKey"`
+	GiraLastVersionCheck int64  `json:"GiraLastVersionCheck"`
 }
 
 func New() *Configuration {
@@ -33,11 +40,12 @@ func New() *Configuration {
 	if _, statError := os.Stat(configurationFilePath); statError != nil {
 		configuration, createConfigurationError := createConfiguration(Configuration{
 			JSON: JSONConfiguration{
-				JiraHost:      "",
-				JiraToken:     "",
-				JiraAccountID: "",
-				JiraEmail:     "",
-				JiraUserKey:   "",
+				JiraHost:             "",
+				JiraToken:            "",
+				JiraAccountID:        "",
+				JiraEmail:            "",
+				JiraUserKey:          "",
+				GiraLastVersionCheck: 0,
 			},
 			Path:    configurationFilePath,
 			isDebug: os.Getenv("DEBUG") == "TRUE",
@@ -56,15 +64,25 @@ func New() *Configuration {
 
 	return &Configuration{
 		JSON: JSONConfiguration{
-			JiraHost:      fileContent.JSON.JiraHost,
-			JiraToken:     fileContent.JSON.JiraToken,
-			JiraAccountID: fileContent.JSON.JiraAccountID,
-			JiraEmail:     fileContent.JSON.JiraEmail,
-			JiraUserKey:   fileContent.JSON.JiraUserKey,
+			JiraHost:             fileContent.JSON.JiraHost,
+			JiraToken:            fileContent.JSON.JiraToken,
+			JiraAccountID:        fileContent.JSON.JiraAccountID,
+			JiraEmail:            fileContent.JSON.JiraEmail,
+			JiraUserKey:          fileContent.JSON.JiraUserKey,
+			GiraLastVersionCheck: fileContent.JSON.GiraLastVersionCheck,
 		},
 		Path:    configurationFilePath,
 		isDebug: os.Getenv("DEBUG") == "TRUE",
 	}
+}
+
+func (configuration *Configuration) GetVersion(refreshVersionCheck bool) string {
+	if refreshVersionCheck {
+		configuration.JSON.GiraLastVersionCheck = time.Now().Unix()
+		configuration.Update()
+	}
+
+	return strings.TrimSpace(currentVersion)
 }
 
 func (configuration *Configuration) Update() {
