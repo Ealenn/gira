@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	Configuration "gira/configuration"
-	UI "gira/ui"
 	"os"
 	"regexp"
 	"strings"
@@ -16,9 +15,9 @@ import (
 func CmdConfig(configuration *Configuration.Configuration, loggerService *Services.LoggerService) {
 	reader := bufio.NewReader(os.Stdin)
 
-	loggerService.Info("Enter the Jira API URL (Example %s):", UI.InfoStyle.Render("https://jira.mycompagny.com"))
+	loggerService.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
 	if configuration.JSON.JiraHost != "" {
-		loggerService.Info("[%s]", UI.InfoStyle.Render(configuration.JSON.JiraHost))
+		loggerService.Info("[%s]", configuration.JSON.JiraHost)
 	}
 	inputJiraHost, _ := reader.ReadString('\n')
 	inputJiraHost = strings.TrimSpace(inputJiraHost)
@@ -26,13 +25,13 @@ func CmdConfig(configuration *Configuration.Configuration, loggerService *Servic
 		inputJiraHost = configuration.JSON.JiraHost
 	}
 	if !isValidURLRegex(inputJiraHost) {
-		loggerService.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", UI.ErrorStyle.Render("ERROR"), inputJiraHost)
+		loggerService.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
 	}
 	configuration.JSON.JiraHost = inputJiraHost
 
-	loggerService.Info("Enter the Jira Token (See %s%s):", UI.InfoStyle.Render(inputJiraHost), UI.InfoStyle.Render("/manage-profile/security/api-tokens"))
+	loggerService.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
 	if configuration.JSON.JiraToken != "" {
-		loggerService.Info("[Token already defined. Press ENTER to continue without making any changes.]")
+		loggerService.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
 	}
 	inputJiraTokenBytes, _ := term.ReadPassword(os.Stdin.Fd())
 	inputJiraToken := strings.TrimSpace(string(inputJiraTokenBytes))
@@ -45,7 +44,7 @@ func CmdConfig(configuration *Configuration.Configuration, loggerService *Servic
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
 	if jiraUserError != nil {
-		loggerService.Fatal("Unable to fetch Jira account in %s due to : %v", inputJiraHost, jiraUserError)
+		loggerService.Fatal("❌ Unable to fetch Jira account in %s due to : %v", inputJiraHost, jiraUserError)
 	}
 
 	configuration.JSON.JiraEmail = jiraUser.EmailAddress
