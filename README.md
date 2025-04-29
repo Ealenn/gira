@@ -72,14 +72,14 @@ chmod +x /usr/local/bin/gira
 If you prefer using Docker, you can run Gira directly without installing it:
 
 ```sh
-docker run --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gira
+docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gira
 ```
 
 To make it easier to use Gira like a native CLI, add this alias to your shell config:
 
 ```sh
 # In your ~/.bashrc or ~/.zshrc
-alias gira='docker run --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gira'
+alias gira='docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gira'
 ```
 
 After reloading your shell, you'll be able to run gira from anywhere.
