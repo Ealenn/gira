@@ -48,6 +48,16 @@ func (logger *LoggerService) Debug(format string, args ...any) {
 	}
 }
 
+func (logger *LoggerService) Log(format string, args ...any) {
+	if logger.Level <= DEBUG {
+		fmt.Print(InfoStyle.Render("[LOG] "))
+	}
+
+	if logger.Level <= INFO {
+		write(InfoStyle, fmt.Sprintf(format, args...))
+	}
+}
+
 func (logger *LoggerService) Info(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(InfoStyle.Render("[INFO] "))

@@ -23,6 +23,9 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
     - [🌱 `branch`: Create a new Git branch using Jira issue ID](#-branch-create-a-new-git-branch-using-jira-issue-id)
       - [Usage](#usage)
       - [Example](#example)
+    - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
+      - [Usage](#usage-1)
+      - [Example](#example-1)
 
 ## 📦 Installation
 
@@ -123,6 +126,7 @@ Available Commands:
   configure   Configure Gira with Jira account and API token
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  issue       Show details of the current issue linked to the current Git branch
   version     Display the current Gira version and check for available updates
 
 Flags:
@@ -184,4 +188,54 @@ Flags:
 ❯ gira branch ISSUE-123
 Branch feature/ISSUE-123/update-app-dependencies-to-the-latest-version will be generated
 Press ENTER to continue, CTRL+C to cancel
+```
+
+### 🕵️ `issue`: Show details of issue (from current branch or specified issue ID)
+
+Displays detailed information about a Jira issue.
+
+- If no issue ID is provided, the issue associated with the current Git branch is used.
+- If an issue ID is specified, the command will display information for that issue.
+
+This includes the issue key, summary, description, status, priority, assignee, and other relevant metadata.
+
+Useful for quickly reviewing the context of your work without leaving the terminal.
+
+#### Usage
+```
+Usage:
+  gira issue [issueId] [flags]
+
+Examples:
+  gira issue
+  gira issue ABC-123
+
+Flags:
+  -h, --help   help for issue
+```
+
+#### Example
+```
+❯ gira issue
+
+Issue: PROJ-457
+Summary: Fix 500 error when submitting user registration form
+Priority: High - Status: In Progress
+Assignee: Alice Martin <alice.martin@company.com>
+Description:
+
+Users receive a 500 Internal Server Error after submitting the registration form.
+The issue appears to be related to missing validation on the email field when the user already exists.
+
+Steps to reproduce:
+1. Go to /register
+2. Fill the form with an existing email
+3. Submit
+
+Expected: A validation message
+Actual: 500 error
+
+Refer to the backend error logs and the related ticket: DEVOPS-123.
+
+🔗 More: https://jira.company.com/browse/PROJ-457
 ```

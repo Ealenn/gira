@@ -42,6 +42,33 @@ This helps enforce consistent naming conventions and improve traceability betwee
 	rootCmd.AddCommand(branchCommand)
 
 	/* ----------------------
+	 * Issue
+	 * ----------------------
+	 */
+	var issueCommand = &cobra.Command{
+		Use:   "issue [issueId]",
+		Short: "Show details of a Jira issue (from current branch or specified issue ID)",
+		Long: `
+Displays detailed information about a Jira issue.
+
+If no issue ID is provided, the issue associated with the current Git branch is used.
+If an issue ID is specified, the command will display information for that issue.
+
+This includes the issue key, summary, description, status, priority, assignee, and other relevant metadata.
+Useful for quickly reviewing the context of your work without leaving the terminal.`,
+		Example: "  gira issue\n  gira issue ABC-123",
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			var issueId *string
+			if len(args) > 0 {
+				issueId = &args[0]
+			}
+			CMD.CmdIssue(configuration, logger, issueId)
+		},
+	}
+	rootCmd.AddCommand(issueCommand)
+
+	/* ----------------------
 	 * Config
 	 * ----------------------
 	 */
