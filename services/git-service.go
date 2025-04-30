@@ -2,6 +2,7 @@ package services
 
 import (
 	"os/exec"
+	"strings"
 )
 
 type GitService struct {
@@ -23,6 +24,13 @@ func (gitService *GitService) CreateBranch(name string) []byte {
 	}
 
 	return output
+}
+
+func (gitService *GitService) CurrentBranch() (string, error) {
+	cmd := exec.Command("git", "branch", "--show-current")
+	response, err := cmd.CombinedOutput()
+
+	return strings.TrimSpace(string(response)), err
 }
 
 func (gitService *GitService) IsBranchExist(name string) bool {
