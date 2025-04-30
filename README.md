@@ -84,6 +84,13 @@ alias gira='docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gi
 
 After reloading your shell, you'll be able to run gira from anywhere.
 
+> 💡 **Note**: The Gira Docker image is also available on GitHub Container Registry.
+> 
+> If your company restricts access to docker.io, you can use the GitHub-hosted image instead by replacing `ealen/gira` with `ghcr.io/ealenn/gira` in the above commands:
+> ```sh
+> alias gira='docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ghcr.io/ealenn/gira'
+> ```
+
 ## ✨ Shell Autocompletion
 
 Gira supports autocompletion for major shells like Bash, Zsh, Fish, and PowerShell.
@@ -167,8 +174,9 @@ Aliases:
   branch, checkout
 
 Flags:
-  -a, --assignIssue   assign the issue to the currently logged-in Jira user after creating the Git branch
-  -h, --help          help for branch
+  -a, --assign   assign the issue to the currently logged-in Jira user after creating the Git branch
+  -f, --force    disable interactive prompts and force branch creation even if checks would normally prevent it
+  -h, --help     help for branch
 ```
 
 #### Example
