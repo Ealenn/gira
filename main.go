@@ -22,6 +22,7 @@ func main() {
 	 * ----------------------
 	 */
 	var branchCommandAssignIssueFlag bool
+	var branchCommandForceFlag bool
 	var branchCommand = &cobra.Command{
 		Use:   "branch [Jira Issue ID]",
 		Short: "Create a new Git branch using Jira issue ID",
@@ -33,10 +34,11 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Aliases: []string{"checkout"},
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			CMD.CmdBranch(configuration, logger, args[0], branchCommandAssignIssueFlag)
+			CMD.CmdBranch(configuration, logger, args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
 		},
 	}
-	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assignIssue", "a", false, "assign the issue to the currently logged-in Jira user after creating the Git branch")
+	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assign", "a", false, "assign the issue to the currently logged-in Jira user after creating the Git branch")
+	branchCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")
 	rootCmd.AddCommand(branchCommand)
 
 	/* ----------------------

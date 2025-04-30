@@ -15,7 +15,7 @@ func CmdVersion(configuration *Configuration.Configuration, loggerService *Servi
 	githubLastRelease, githubError := githubService.GetLatestRelease()
 	if githubError != nil {
 		loggerService.Debug("Unable to fetch latest version of Gira due to %v", githubError)
-		loggerService.Fatal("Failed to fetch latest release from GitHub")
+		loggerService.Fatal("❌ Failed to fetch latest release from GitHub, check %s", "https://github.com/Ealenn/gira")
 		return
 	}
 

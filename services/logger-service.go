@@ -58,6 +58,14 @@ func (logger *LoggerService) Info(format string, args ...any) {
 	}
 }
 
+func (logger *LoggerService) Warn(format string, args ...any) {
+	if logger.Level <= DEBUG {
+		fmt.Print(ErrorStyle.Render("[WARN] "))
+	}
+
+	write(ErrorStyle, format, args...)
+}
+
 func (logger *LoggerService) Fatal(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(ErrorStyle.Render("[FATAL] "))

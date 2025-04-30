@@ -24,3 +24,17 @@ func (gitService *GitService) CreateBranch(name string) []byte {
 
 	return output
 }
+
+func (gitService *GitService) IsBranchExist(name string) bool {
+	cmd := exec.Command("git", "rev-parse", "--verify", name)
+	_, err := cmd.CombinedOutput()
+
+	return err == nil
+}
+
+func (gitService *GitService) SwitchBranch(name string) bool {
+	cmd := exec.Command("git", "checkout", name)
+	_, err := cmd.CombinedOutput()
+
+	return err == nil
+}

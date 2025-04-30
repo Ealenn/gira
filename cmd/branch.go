@@ -12,7 +12,7 @@ import (
 	Services "gira/services"
 )
 
-func CmdBranch(configuration *Configuration.Configuration, loggerService *Services.LoggerService, issueId string, assignIssue bool) {
+func CmdBranch(configuration *Configuration.Configuration, loggerService *Services.LoggerService, issueId string, assignIssue bool, force bool) {
 	UI.CheckConfiguration(loggerService, configuration)
 	UI.CheckUpdate(loggerService, configuration)
 
@@ -27,11 +27,25 @@ func CmdBranch(configuration *Configuration.Configuration, loggerService *Servic
 	}
 
 	branchName := getBranchTitle(issue.Key, issue.Fields.IssueType.Name, issue.Fields.Summary)
+	if gitService.IsBranchExist(branchName) {
+		loggerService.Warn("❌ Branch named %s already exists", branchName)
 
-	loggerService.Info("Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", Services.ErrorStyle.Render("CTRL+C"))
-	bufio.NewReader(os.Stdin).ReadLine()
+		if !force {
+			loggerService.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", Services.ErrorStyle.Render("CTRL+C"))
+			bufio.NewReader(os.Stdin).ReadLine()
+		}
 
-	gitService.CreateBranch(branchName)
+		gitService.SwitchBranch(branchName)
+		loggerService.Info("✅ %s has just been checkout", branchName)
+	} else {
+		if !force {
+			loggerService.Info("🌳 Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", Services.ErrorStyle.Render("CTRL+C"))
+			bufio.NewReader(os.Stdin).ReadLine()
+		}
+
+		gitService.CreateBranch(branchName)
+		loggerService.Info("✅ %s branch was created", branchName)
+	}
 
 	if assignIssue {
 		if assignError := jiraService.AssignIssue(issueId); assignError != nil {
