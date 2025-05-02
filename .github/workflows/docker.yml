@@ -58,16 +58,17 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           sbom: true
-          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x'}}
+          platforms: 'linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x'
           build-args: |
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - 
-        name: Docker Hub Description
+      - name: Docker Hub Description
         if: success() && github.ref == format('refs/heads/{0}', 'master')
         uses: peter-evans/dockerhub-description@v4
         with:
