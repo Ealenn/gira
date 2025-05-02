@@ -29,7 +29,14 @@ jobs:
         with:
           version: v2.0
 
-      - run: go build
+      - name: Install dependencies
+        run: go get .
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test
 
   go-security:
     name: Security
