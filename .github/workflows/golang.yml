@@ -29,6 +29,8 @@ jobs:
         with:
           version: v2.0
 
+      - run: go build
+
   go-security:
     name: Security
     runs-on: ubuntu-latest
