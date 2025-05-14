@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//go:embed version.txt
+//go:embed version
 var currentVersion string
 
 type Configuration struct {
