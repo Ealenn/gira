@@ -19,10 +19,13 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
   - [✨ Shell Autocompletion](#-shell-autocompletion)
   - [🚀 Usage](#-usage)
-    - [⚙️ `configuration`: Configure Gira with Jira account and API token](#️-configuration-configure-gira-with-jira-account-and-api-token)
+    - [⚙️ `config`: Configure Gira with Jira account and API token](#️-config-configure-gira-with-jira-account-and-api-token)
     - [🌱 `branch`: Create a new Git branch using Jira issue ID](#-branch-create-a-new-git-branch-using-jira-issue-id)
       - [Usage](#usage)
       - [Example](#example)
+    - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
+      - [Usage](#usage-1)
+      - [Example](#example-1)
 
 ## 📦 Installation
 
@@ -84,6 +87,13 @@ alias gira='docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ealen/gi
 
 After reloading your shell, you'll be able to run gira from anywhere.
 
+> 💡 **Note**: The Gira Docker image is also available on GitHub Container Registry.
+> 
+> If your company restricts access to docker.io, you can use the GitHub-hosted image instead by replacing `ealen/gira` with `ghcr.io/ealenn/gira` in the above commands:
+> ```sh
+> alias gira='docker run -it --rm -v "$HOME:/root" -v "$PWD:/app" -w /app ghcr.io/ealenn/gira'
+> ```
+
 ## ✨ Shell Autocompletion
 
 Gira supports autocompletion for major shells like Bash, Zsh, Fish, and PowerShell.
@@ -113,9 +123,10 @@ Usage:
 
 Available Commands:
   branch      Create a new Git branch using Jira issue ID.
-  configure   Configure Gira with Jira account and API token
+  config      Configure Gira with Jira account and API token
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
+  issue       Show details of the current issue linked to the current Git branch
   version     Display the current Gira version and check for available updates
 
 Flags:
@@ -133,14 +144,14 @@ Use the DEBUG environment variable to display detailed exception stack traces.
 [FATAL] Unable to find Jira TEST-123
 ```
 
-### ⚙️ `configuration`: Configure Gira with Jira account and API token
+### ⚙️ `config`: Configure Gira with Jira account and API token
 
 Configures the Gira CLI by setting up the Jira account credentials, including the Jira host URL, email, and API token.
 This command updates the configuration file to enable communication with the Jira instance for subsequent commands like 'branch'.
 Ensure you have a valid Jira API token from your Atlassian account before running this command.
 
 ```
-❯ gira configure
+❯ gira config
 Enter the Jira API URL (Example https://jira.mycompagny.com): https://jira.mycompagny.com
 Enter the Jira Token (See /manage-profile/security/api-tokens): **********
 ✅ Done!
@@ -167,8 +178,9 @@ Aliases:
   branch, checkout
 
 Flags:
-  -a, --assignIssue   assign the issue to the currently logged-in Jira user after creating the Git branch
-  -h, --help          help for branch
+  -a, --assign   assign the issue to the currently logged-in Jira user after creating the Git branch
+  -f, --force    disable interactive prompts and force branch creation even if checks would normally prevent it
+  -h, --help     help for branch
 ```
 
 #### Example
@@ -176,4 +188,54 @@ Flags:
 ❯ gira branch ISSUE-123
 Branch feature/ISSUE-123/update-app-dependencies-to-the-latest-version will be generated
 Press ENTER to continue, CTRL+C to cancel
+```
+
+### 🕵️ `issue`: Show details of issue (from current branch or specified issue ID)
+
+Displays detailed information about a Jira issue.
+
+- If no issue ID is provided, the issue associated with the current Git branch is used.
+- If an issue ID is specified, the command will display information for that issue.
+
+This includes the issue key, summary, description, status, priority, assignee, and other relevant metadata.
+
+Useful for quickly reviewing the context of your work without leaving the terminal.
+
+#### Usage
+```
+Usage:
+  gira issue [issueId] [flags]
+
+Examples:
+  gira issue
+  gira issue ABC-123
+
+Flags:
+  -h, --help   help for issue
+```
+
+#### Example
+```
+❯ gira issue
+
+Issue: PROJ-457
+Summary: Fix 500 error when submitting user registration form
+Priority: High - Status: In Progress
+Assignee: Alice Martin <alice.martin@company.com>
+Description:
+
+Users receive a 500 Internal Server Error after submitting the registration form.
+The issue appears to be related to missing validation on the email field when the user already exists.
+
+Steps to reproduce:
+1. Go to /register
+2. Fill the form with an existing email
+3. Submit
+
+Expected: A validation message
+Actual: 500 error
+
+Refer to the backend error logs and the related ticket: DEVOPS-123.
+
+🔗 More: https://jira.company.com/browse/PROJ-457
 ```

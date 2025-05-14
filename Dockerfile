@@ -7,13 +7,13 @@ ARG VERSION
 WORKDIR /app
 COPY . .
 
-RUN echo $VERSION > /app/configuration/version.txt
-RUN CGO_ENABLED=0 go build -o gira -ldflags="-s -w"
+RUN echo $VERSION > /app/internal/configuration/version
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" /app/cmd/...
 
 ###################################################
 #                     FINAL                       #
 ###################################################
-FROM alpine:3
+FROM alpine:3 AS final
 
 # Install GIT
 RUN apk add git

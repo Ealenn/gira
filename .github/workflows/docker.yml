@@ -2,12 +2,11 @@ name: Docker
 
 on:
   pull_request:
-    branches: 
+    branches:
       - master
       - develop
   push:
-    branches: 
-      - master
+    branches:
       - develop
     tags:
       - '*'
@@ -28,7 +27,7 @@ jobs:
             ghcr.io/Ealenn/gira
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
             type=raw,value=develop,enable=${{ github.ref == format('refs/heads/{0}', 'develop') }}
             type=semver,pattern={{version}},enable=${{ github.ref_type == 'tag' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.ref_type == 'tag' }}
@@ -59,20 +58,22 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           sbom: true
-          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
+          platforms: 'linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x'
           build-args: |
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - 
-        name: Docker Hub Description
-        if: success() && github.ref == format('refs/heads/{0}', 'master')
+      - name: Docker Hub Description
+        if: success() && github.ref_type == 'tag'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           short-description: ${{ github.event.repository.description }}
           repository: ealen/gira
+          enable-url-completion: true

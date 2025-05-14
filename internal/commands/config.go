@@ -1,23 +1,24 @@
-package cmd
+package commands
 
 import (
 	"bufio"
-	Configuration "gira/configuration"
 	"os"
 	"regexp"
 	"strings"
 
-	Services "gira/services"
+	"github.com/Ealenn/gira/internal/configuration"
+	"github.com/Ealenn/gira/internal/logs"
+	"github.com/Ealenn/gira/internal/services"
 
 	"github.com/charmbracelet/x/term"
 )
 
-func CmdConfig(configuration *Configuration.Configuration, loggerService *Services.LoggerService) {
+func Config(configuration *configuration.Configuration, logger *logs.Logger) {
 	reader := bufio.NewReader(os.Stdin)
 
-	loggerService.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
+	logger.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
 	if configuration.JSON.JiraHost != "" {
-		loggerService.Info("[%s]", configuration.JSON.JiraHost)
+		logger.Info("[%s]", configuration.JSON.JiraHost)
 	}
 	inputJiraHost, _ := reader.ReadString('\n')
 	inputJiraHost = strings.TrimSpace(inputJiraHost)
@@ -25,13 +26,13 @@ func CmdConfig(configuration *Configuration.Configuration, loggerService *Servic
 		inputJiraHost = configuration.JSON.JiraHost
 	}
 	if !isValidURLRegex(inputJiraHost) {
-		loggerService.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
+		logger.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
 	}
 	configuration.JSON.JiraHost = inputJiraHost
 
-	loggerService.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
+	logger.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
 	if configuration.JSON.JiraToken != "" {
-		loggerService.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
+		logger.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
 	}
 	inputJiraTokenBytes, _ := term.ReadPassword(os.Stdin.Fd())
 	inputJiraToken := strings.TrimSpace(string(inputJiraTokenBytes))
@@ -40,11 +41,11 @@ func CmdConfig(configuration *Configuration.Configuration, loggerService *Servic
 	}
 	configuration.JSON.JiraToken = inputJiraToken
 
-	jiraService := Services.NewJiraService(configuration)
+	jiraService := services.NewJiraService(configuration)
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
 	if jiraUserError != nil {
-		loggerService.Fatal("❌ Unable to fetch Jira account in %s due to : %v", inputJiraHost, jiraUserError)
+		logger.Fatal("❌ Unable to fetch Jira account in %s due to : %v", inputJiraHost, jiraUserError)
 	}
 
 	configuration.JSON.JiraEmail = jiraUser.EmailAddress
@@ -52,7 +53,7 @@ func CmdConfig(configuration *Configuration.Configuration, loggerService *Servic
 	configuration.JSON.JiraUserKey = jiraUser.Key
 
 	configuration.Update()
-	loggerService.Info("✅ Done!")
+	logger.Info("✅ Done!")
 }
 
 func isValidURLRegex(url string) bool {

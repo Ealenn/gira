@@ -25,12 +25,14 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: 'Version'
-      run: echo "${{ github.event.release.name }}" > configuration/version.txt
+      run: echo "${{ github.event.release.name }}" > ./internal/configuration/version
 
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        project_path: ./cmd/...
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
+        ldflags: -s -w
         asset_name: gira-${{ matrix.goos }}-${{ matrix.goarch }}
         compress_assets: OFF

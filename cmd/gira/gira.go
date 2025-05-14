@@ -1,15 +1,15 @@
 package main
 
 import (
-	CMD "gira/cmd"
-	"gira/configuration"
-	Services "gira/services"
+	"github.com/Ealenn/gira/internal/commands"
+	"github.com/Ealenn/gira/internal/configuration"
+	"github.com/Ealenn/gira/internal/logs"
 
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	logger := Services.NewLoggerService(Services.INFO)
+	logger := logs.NewLogger(logs.INFO)
 	configuration := configuration.New()
 
 	rootCmd := &cobra.Command{
@@ -22,6 +22,7 @@ func main() {
 	 * ----------------------
 	 */
 	var branchCommandAssignIssueFlag bool
+	var branchCommandForceFlag bool
 	var branchCommand = &cobra.Command{
 		Use:   "branch [Jira Issue ID]",
 		Short: "Create a new Git branch using Jira issue ID",
@@ -32,28 +33,56 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Example: "  gira branch ISSUE-123\n  gira branch -a ISSUE-123",
 		Aliases: []string{"checkout"},
 		Args:    cobra.MinimumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			CMD.CmdBranch(configuration, logger, args[0], branchCommandAssignIssueFlag)
+		Run: func(_ *cobra.Command, args []string) {
+			commands.Branch(configuration, logger, args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
 		},
 	}
-	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assignIssue", "a", false, "assign the issue to the currently logged-in Jira user after creating the Git branch")
+	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assign", "a", false, "assign the issue to the currently logged-in Jira user after creating the Git branch")
+	branchCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")
 	rootCmd.AddCommand(branchCommand)
+
+	/* ----------------------
+	 * Issue
+	 * ----------------------
+	 */
+	var issueCommand = &cobra.Command{
+		Use:   "issue [issueId]",
+		Short: "Show details of a Jira issue (from current branch or specified issue ID)",
+		Long: `
+Displays detailed information about a Jira issue.
+
+If no issue ID is provided, the issue associated with the current Git branch is used.
+If an issue ID is specified, the command will display information for that issue.
+
+This includes the issue key, summary, description, status, priority, assignee, and other relevant metadata.
+Useful for quickly reviewing the context of your work without leaving the terminal.`,
+		Example: "  gira issue\n  gira issue ABC-123",
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(_ *cobra.Command, args []string) {
+			var issueID *string
+			if len(args) > 0 {
+				issueID = &args[0]
+			}
+			commands.Issue(configuration, logger, issueID)
+		},
+	}
+	rootCmd.AddCommand(issueCommand)
 
 	/* ----------------------
 	 * Config
 	 * ----------------------
 	 */
 	var configCommand = &cobra.Command{
-		Use:   "configure",
+		Use:   "config",
 		Short: "Configure Gira with Jira account and API token",
 		Long: `
 Configures the Gira CLI by setting up the Jira account credentials, including the Jira host URL, email, and API token.
 This command updates the configuration file to enable communication with the Jira instance for subsequent commands like 'branch'.
 Ensure you have a valid Jira API token from your Atlassian account before running this command.`,
-		Aliases: []string{"config"},
+		Aliases: []string{"configure"},
 		Args:    cobra.MinimumNArgs(0),
-		Run: func(cmd *cobra.Command, args []string) {
-			CMD.CmdConfig(configuration, logger)
+		Run: func(_ *cobra.Command, _ []string) {
+			commands.Config(configuration, logger)
 		},
 	}
 	rootCmd.AddCommand(configCommand)
@@ -69,11 +98,15 @@ Ensure you have a valid Jira API token from your Atlassian account before runnin
 Displays the currently installed version of the Gira CLI.
 Also checks the GitHub repository to determine if a newer version is available for download, helping you stay up-to-date with the latest features and fixes.`,
 		Args: cobra.MinimumNArgs(0),
-		Run: func(cmd *cobra.Command, args []string) {
-			CMD.CmdVersion(configuration, logger)
+		Run: func(_ *cobra.Command, _ []string) {
+			commands.Version(configuration, logger)
 		},
 	}
 	rootCmd.AddCommand(versionCommand)
 
+	/* ----------------------
+	 * Application
+	 * ----------------------
+	 */
 	rootCmd.Execute()
 }
