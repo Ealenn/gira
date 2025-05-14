@@ -1,4 +1,4 @@
-module gira
+module github.com/Ealenn/gira
 
 go 1.24.2
 

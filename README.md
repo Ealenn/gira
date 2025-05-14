@@ -19,7 +19,7 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
   - [✨ Shell Autocompletion](#-shell-autocompletion)
   - [🚀 Usage](#-usage)
-    - [⚙️ `configuration`: Configure Gira with Jira account and API token](#️-configuration-configure-gira-with-jira-account-and-api-token)
+    - [⚙️ `config`: Configure Gira with Jira account and API token](#️-config-configure-gira-with-jira-account-and-api-token)
     - [🌱 `branch`: Create a new Git branch using Jira issue ID](#-branch-create-a-new-git-branch-using-jira-issue-id)
       - [Usage](#usage)
       - [Example](#example)
@@ -123,7 +123,7 @@ Usage:
 
 Available Commands:
   branch      Create a new Git branch using Jira issue ID.
-  configure   Configure Gira with Jira account and API token
+  config      Configure Gira with Jira account and API token
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
   issue       Show details of the current issue linked to the current Git branch
@@ -144,14 +144,14 @@ Use the DEBUG environment variable to display detailed exception stack traces.
 [FATAL] Unable to find Jira TEST-123
 ```
 
-### ⚙️ `configuration`: Configure Gira with Jira account and API token
+### ⚙️ `config`: Configure Gira with Jira account and API token
 
 Configures the Gira CLI by setting up the Jira account credentials, including the Jira host URL, email, and API token.
 This command updates the configuration file to enable communication with the Jira instance for subsequent commands like 'branch'.
 Ensure you have a valid Jira API token from your Atlassian account before running this command.
 
 ```
-❯ gira configure
+❯ gira config
 Enter the Jira API URL (Example https://jira.mycompagny.com): https://jira.mycompagny.com
 Enter the Jira Token (See /manage-profile/security/api-tokens): **********
 ✅ Done!

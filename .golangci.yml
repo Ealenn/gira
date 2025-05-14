@@ -1,5 +1,61 @@
-version: "2"
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+  exclusions:
+    generated: lax
+
+  settings:
+    gofmt:
+      simplify: true
+
+    goimports:
+      local-prefixes:
+        - github.com/Ealenn/gira
 
 linters:
-  disable:
-    - errcheck
+  default: none
+
+  enable:
+    - depguard
+    - dupl
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - revive
+    - staticcheck
+    - unused
+    - usestdlibvars
+
+  exclusions:
+    generated: lax
+
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+
+    rules: []
+
+    warn-unused: true
+
+  settings:
+    depguard:
+      rules:
+        Main:
+          deny:
+            - pkg: github.com/hashicorp/go-multierror
+              desc: "use errors instead"
+            - pkg: github.com/pkg/errors
+              desc: "use errors instead"
+
+    dupl:
+      threshold: 400
+
+run:
+  timeout: 10m
+
+version: "2"

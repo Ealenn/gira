@@ -1,4 +1,4 @@
-package services
+package logs
 
 import (
 	"fmt"
@@ -7,48 +7,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var ErrorStyle = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#e74c3c"))
-
-var DebugStyle = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#95a5a6"))
-
-var InfoStyle = lipgloss.NewStyle().
-	Bold(true).
-	Foreground(lipgloss.Color("#3498db"))
-
-var CodeStyle = lipgloss.NewStyle().
-	Bold(true).Foreground(lipgloss.Color("#2980b9"))
-
-type Level int8
-
-const (
-	DEBUG Level = 0
-	INFO  Level = 10
-	FATAL Level = 100
-)
-
-type LoggerService struct {
+type Logger struct {
 	Level Level
 }
 
-func NewLoggerService(level Level) *LoggerService {
+func NewLogger(level Level) *Logger {
 	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
 		level = DEBUG
 	}
-	return &LoggerService{Level: level}
+	return &Logger{Level: level}
 }
 
-func (logger *LoggerService) Debug(format string, args ...any) {
+func (logger *Logger) Debug(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(DebugStyle.Render("[DEBUG] "))
 		write(DebugStyle, format, args...)
 	}
 }
 
-func (logger *LoggerService) Log(format string, args ...any) {
+func (logger *Logger) Log(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(InfoStyle.Render("[LOG] "))
 	}
@@ -58,7 +35,7 @@ func (logger *LoggerService) Log(format string, args ...any) {
 	}
 }
 
-func (logger *LoggerService) Info(format string, args ...any) {
+func (logger *Logger) Info(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(InfoStyle.Render("[INFO] "))
 	}
@@ -68,7 +45,7 @@ func (logger *LoggerService) Info(format string, args ...any) {
 	}
 }
 
-func (logger *LoggerService) Warn(format string, args ...any) {
+func (logger *Logger) Warn(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(ErrorStyle.Render("[WARN] "))
 	}
@@ -76,7 +53,7 @@ func (logger *LoggerService) Warn(format string, args ...any) {
 	write(ErrorStyle, format, args...)
 }
 
-func (logger *LoggerService) Fatal(format string, args ...any) {
+func (logger *Logger) Fatal(format string, args ...any) {
 	if logger.Level <= DEBUG {
 		fmt.Print(ErrorStyle.Render("[FATAL] "))
 	}

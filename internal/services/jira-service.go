@@ -3,20 +3,20 @@ package services
 import (
 	"context"
 	"crypto/tls"
-	Configuration "gira/configuration"
 	"log"
 	"net/http"
 
+	"github.com/Ealenn/gira/internal/configuration"
 	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 )
 
 type JiraService struct {
 	Client        *v2.Client
-	Configuration *Configuration.Configuration
+	Configuration *configuration.Configuration
 }
 
-func NewJiraService(configuration *Configuration.Configuration) *JiraService {
+func NewJiraService(configuration *configuration.Configuration) *JiraService {
 	client, err := v2.New(&http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -39,8 +39,8 @@ func NewJiraService(configuration *Configuration.Configuration) *JiraService {
 	}
 }
 
-func (jiraService *JiraService) GetIssue(issueKeyId string) (*models.IssueSchemeV2, *models.ResponseScheme) {
-	issue, response, err := jiraService.Client.Issue.Get(context.Background(), issueKeyId, nil, nil)
+func (jiraService *JiraService) GetIssue(issueKeyID string) (*models.IssueSchemeV2, *models.ResponseScheme) {
+	issue, response, err := jiraService.Client.Issue.Get(context.Background(), issueKeyID, nil, nil)
 
 	if err != nil {
 		return nil, response
@@ -57,17 +57,17 @@ func (jiraService *JiraService) GetMyself() (*models.UserScheme, error) {
 	return user, nil
 }
 
-func (jiraService *JiraService) AssignIssue(issueKeyId string) error {
+func (jiraService *JiraService) AssignIssue(issueKeyID string) error {
 	ctx := context.Background()
 
 	// For Jira Cloud, use AccountID
 	if jiraService.Configuration.JSON.JiraAccountID != "" {
-		_, err := jiraService.Client.Issue.Assign(ctx, issueKeyId, jiraService.Configuration.JSON.JiraAccountID)
+		_, err := jiraService.Client.Issue.Assign(ctx, issueKeyID, jiraService.Configuration.JSON.JiraAccountID)
 		return err
 	}
 
 	// For Jira Server/Data Center, use User Key or Name
-	_, err := jiraService.Client.Issue.Update(ctx, issueKeyId, true, &models.IssueSchemeV2{
+	_, err := jiraService.Client.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
 			Assignee: &models.UserScheme{
 				Key:  jiraService.Configuration.JSON.JiraUserKey,

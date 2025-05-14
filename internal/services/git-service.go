@@ -3,15 +3,17 @@ package services
 import (
 	"os/exec"
 	"strings"
+
+	"github.com/Ealenn/gira/internal/logs"
 )
 
 type GitService struct {
-	loggerService *LoggerService
+	logger *logs.Logger
 }
 
-func NewGitService(loggerService *LoggerService) *GitService {
+func NewGitService(logger *logs.Logger) *GitService {
 	return &GitService{
-		loggerService,
+		logger,
 	}
 }
 
@@ -20,7 +22,7 @@ func (gitService *GitService) CreateBranch(name string) []byte {
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		gitService.loggerService.Fatal("%s", output)
+		gitService.logger.Fatal("%s", output)
 	}
 
 	return output
