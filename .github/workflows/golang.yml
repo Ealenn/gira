@@ -1,8 +1,5 @@
 name: Go
 on:
-  push:
-    branches:
-      - master
   pull_request:
 
 permissions:
@@ -30,7 +27,7 @@ jobs:
           version: v2.0
 
       - name: Install dependencies
-        run: go get .
+        run: go get ./cmd/...
 
       - name: Build
         run: go build -ldflags="-s -w" ./cmd/...
