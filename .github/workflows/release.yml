@@ -30,7 +30,7 @@ jobs:
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        project_path: ./cmd/...
+        project_path: ./cmd/gira
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         ldflags: -s -w
