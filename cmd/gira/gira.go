@@ -11,13 +11,27 @@ import (
 )
 
 func main() {
-	logger := logs.NewLogger(logs.INFO)
 	configuration := configuration.New()
 
 	rootCmd := &cobra.Command{
 		Use:     "gira",
 		Version: configuration.GetVersion(false),
+		Short:   "Gira is a CLI tool that connects your Git workflow with Jira, letting you automate tasks like branch creation and issue updates directly from your terminal.",
+		Long: `
+Gira is a simple and powerful command-line tool that bridges your Git workflow with Jira.
+It helps you automate common development tasks such as creating Git branches from Jira issues, updating issue statuses, or closing issues — all without leaving your terminal.
+With Gira, you can streamline your development processes, eliminate repetitive copy-pasting between Jira and Git, and ensure your issue tracking stays in sync with your commits.
+Use Gira to accelerate your workflow and keep your projects organized more efficiently.
+		`,
 	}
+
+	/* ----------------------
+	 * Logger
+	 * ----------------------
+	 */
+	var verbose bool
+	logger := logs.New(&verbose)
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "Print detailed operation logs and debug information")
 
 	/* ----------------------
 	 * Branch

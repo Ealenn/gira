@@ -8,45 +8,38 @@ import (
 )
 
 type Logger struct {
-	Level Level
+	verbose *bool
 }
 
-func NewLogger(level Level) *Logger {
-	if _, isDebug := os.LookupEnv("DEBUG"); isDebug {
-		level = DEBUG
-	}
-	return &Logger{Level: level}
+func New(verbose *bool) *Logger {
+	return &Logger{verbose: verbose}
 }
 
 func (logger *Logger) Debug(format string, args ...any) {
-	if logger.Level <= DEBUG {
+	if *logger.verbose {
 		fmt.Print(DebugStyle.Render("[DEBUG] "))
 		write(DebugStyle, format, args...)
 	}
 }
 
 func (logger *Logger) Log(format string, args ...any) {
-	if logger.Level <= DEBUG {
+	if *logger.verbose {
 		fmt.Print(InfoStyle.Render("[LOG] "))
 	}
 
-	if logger.Level <= INFO {
-		write(InfoStyle, fmt.Sprintf(format, args...))
-	}
+	write(InfoStyle, fmt.Sprintf(format, args...))
 }
 
 func (logger *Logger) Info(format string, args ...any) {
-	if logger.Level <= DEBUG {
+	if *logger.verbose {
 		fmt.Print(InfoStyle.Render("[INFO] "))
 	}
 
-	if logger.Level <= INFO {
-		write(InfoStyle, format, args...)
-	}
+	write(InfoStyle, format, args...)
 }
 
 func (logger *Logger) Warn(format string, args ...any) {
-	if logger.Level <= DEBUG {
+	if *logger.verbose {
 		fmt.Print(ErrorStyle.Render("[WARN] "))
 	}
 
@@ -54,7 +47,7 @@ func (logger *Logger) Warn(format string, args ...any) {
 }
 
 func (logger *Logger) Fatal(format string, args ...any) {
-	if logger.Level <= DEBUG {
+	if *logger.verbose {
 		fmt.Print(ErrorStyle.Render("[FATAL] "))
 	}
 
