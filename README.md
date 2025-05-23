@@ -122,24 +122,28 @@ Usage:
   gira [command]
 
 Available Commands:
-  branch      Create a new Git branch using Jira issue ID.
-  config      Configure Gira with Jira account and API token
+  branch      Create a new Git branch using Jira issue ID
   completion  Generate the autocompletion script for the specified shell
+  config      Configure Gira with Jira account and API token
   help        Help about any command
-  issue       Show details of the current issue linked to the current Git branch
+  issue       Show details of a Jira issue (from current branch or specified issue ID)
   version     Display the current Gira version and check for available updates
 
 Flags:
   -h, --help      help for gira
+      --verbose   Print detailed operation logs and debug information
   -v, --version   version for gira
 
 Use "gira [command] --help" for more information about a command.
 ```
 
-Use the DEBUG environment variable to display detailed exception stack traces.
+🐞 Use the `--verbose` flag to display detailed exception or stack traces, which can help you better understand what went wrong.
 
+This information is especially useful before creating a bug issue, as it provides more context for troubleshooting and reporting problems.
+
+Example : 
 ```sh
-❯ DEBUG=1 gira branch TEST-123
+❯ gira branch TEST-123 --verbose
 [DEBUG] Issue TEST-123 response status 404 
 [FATAL] Unable to find Jira TEST-123
 ```

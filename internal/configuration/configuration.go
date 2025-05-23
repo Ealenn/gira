@@ -16,9 +16,8 @@ import (
 var currentVersion string
 
 type Configuration struct {
-	JSON    JSONConfiguration
-	Path    string
-	isDebug bool
+	JSON JSONConfiguration
+	Path string
 }
 
 type JSONConfiguration struct {
@@ -47,8 +46,7 @@ func New() *Configuration {
 				JiraUserKey:          "",
 				GiraLastVersionCheck: 0,
 			},
-			Path:    configurationFilePath,
-			isDebug: os.Getenv("DEBUG") == "TRUE",
+			Path: configurationFilePath,
 		})
 
 		if createConfigurationError != nil {
@@ -71,8 +69,7 @@ func New() *Configuration {
 			JiraUserKey:          fileContent.JSON.JiraUserKey,
 			GiraLastVersionCheck: fileContent.JSON.GiraLastVersionCheck,
 		},
-		Path:    configurationFilePath,
-		isDebug: os.Getenv("DEBUG") == "TRUE",
+		Path: configurationFilePath,
 	}
 }
 
