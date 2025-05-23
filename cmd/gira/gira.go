@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/Ealenn/gira/internal/commands"
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/logs"
@@ -108,5 +110,7 @@ Also checks the GitHub repository to determine if a newer version is available f
 	 * Application
 	 * ----------------------
 	 */
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

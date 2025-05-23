@@ -13,7 +13,7 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
 - [🦒 Gira — Git \& Jira CLI Tool](#-gira--git--jira-cli-tool)
   - [📦 Installation](#-installation)
     - [🔧 Automatic](#-automatic)
-      - [🐧 Linux / MacOS](#-linux--macos)
+      - [🐧 Unix (Linux / MacOS)](#-unix-linux--macos)
       - [🪟 Windows](#-windows)
     - [👉 Manual (Download the Binary)](#-manual-download-the-binary)
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
@@ -37,10 +37,10 @@ Automated install/update, don't forget to always verify what you're piping into 
 
 The script installs downloaded binary to HOME directory by default, but it can be changed by setting DIR environment variable.
 
-#### 🐧 Linux / MacOS
+#### 🐧 Unix (Linux / MacOS)
 
 ```sh
-curl https://raw.githubusercontent.com/Ealenn/gira/master/install_linux.sh | bash
+curl https://raw.githubusercontent.com/Ealenn/gira/master/install_unix.sh | bash
 ```
 
 #### 🪟 Windows

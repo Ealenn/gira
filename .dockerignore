@@ -6,5 +6,5 @@ version.json
 .editorconfig
 .dockerignore
 .gitignore
-install_linux.sh
+install_unix.sh
 install_windows.ps1
