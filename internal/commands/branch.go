@@ -10,50 +10,61 @@ import (
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/logs"
 	"github.com/Ealenn/gira/internal/services"
-	"github.com/Ealenn/gira/internal/ui"
 )
 
-func Branch(configuration *configuration.Configuration, logger *logs.Logger, issueID string, assignIssue bool, force bool) {
-	ui.CheckConfiguration(logger, configuration)
-	ui.CheckUpdate(logger, configuration)
+type Branch struct {
+	logger        *logs.Logger
+	configuration *configuration.Configuration
+	profile       *configuration.Profile
+	jiraService   *services.JiraService
+	gitService    *services.GitService
+}
 
-	jiraService := services.NewJiraService(configuration)
-	gitService := services.NewGitService(logger)
+func NewBranch(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Branch {
+	return &Branch{
+		logger:        logger,
+		configuration: configuration,
+		profile:       profile,
+		jiraService:   services.NewJiraService(profile),
+		gitService:    services.NewGitService(logger),
+	}
+}
 
-	issue, issueResponse := jiraService.GetIssue(issueID)
+func (command Branch) Run(issueID string, assign bool, force bool) {
+	issue, issueResponse := command.jiraService.GetIssue(issueID)
 
 	if issue == nil {
-		logger.Debug("Issue %s response status %s", issueID, issueResponse.Status)
-		logger.Fatal("❌ Unable to find Jira %s", issueID)
+		command.logger.Debug("Issue %s response status %s", issueID, issueResponse.Status)
+		command.logger.Fatal("❌ Unable to find issue %s", issueID)
 	}
 
 	branchName := getBranchTitle(issue.Key, issue.Fields.IssueType.Name, issue.Fields.Summary)
-	if gitService.IsBranchExist(branchName) {
-		logger.Warn("❌ Branch named %s already exists", branchName)
+	if command.gitService.IsBranchExist(branchName) {
+		command.logger.Warn("❌ Branch named %s already exists", branchName)
 
 		if !force {
-			logger.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", logs.ErrorStyle.Render("CTRL+C"))
+			command.logger.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", logs.ErrorStyle.Render("CTRL+C"))
 			bufio.NewReader(os.Stdin).ReadLine()
 		}
 
-		gitService.SwitchBranch(branchName)
-		logger.Info("✅ %s has just been checkout", branchName)
+		command.gitService.SwitchBranch(branchName)
+		command.logger.Info("✅ %s has just been checkout", branchName)
 	} else {
 		if !force {
-			logger.Info("🌳 Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", logs.ErrorStyle.Render("CTRL+C"))
+			command.logger.Info("🌳 Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", logs.ErrorStyle.Render("CTRL+C"))
 			bufio.NewReader(os.Stdin).ReadLine()
 		}
 
-		gitService.CreateBranch(branchName)
-		logger.Info("✅ %s branch was created", branchName)
+		command.gitService.CreateBranch(branchName)
+		command.logger.Info("✅ %s branch was created", branchName)
 	}
 
-	if assignIssue {
-		if assignError := jiraService.AssignIssue(issueID); assignError != nil {
-			logger.Debug("%v", assignError)
-			logger.Info("❌ %s Unable to assign issue %s to %s...", logs.ErrorStyle.Render("Oups..."), issueID, configuration.JSON.JiraUserKey)
+	if assign {
+		if assignError := command.jiraService.AssignIssue(issueID); assignError != nil {
+			command.logger.Debug("%v", assignError)
+			command.logger.Info("❌ %s Unable to assign issue %s to %s...", logs.ErrorStyle.Render("Oups..."), issueID, command.profile.Jira.UserKey)
 		} else {
-			logger.Info("✅ Jira %s has been assigned to %s", issueID, configuration.JSON.JiraUserKey)
+			command.logger.Info("✅ Jira %s has been assigned to %s", issueID, command.profile.Jira.UserKey)
 		}
 	}
 }

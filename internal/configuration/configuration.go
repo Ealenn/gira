@@ -1,32 +1,18 @@
 package configuration
 
 import (
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
-
-//go:embed version
-var currentVersion string
 
 type Configuration struct {
 	JSON JSONConfiguration
 	Path string
-}
-
-type JSONConfiguration struct {
-	JiraHost             string `json:"JiraHost"`
-	JiraToken            string `json:"JiraToken"`
-	JiraAccountID        string `json:"JiraAccountID"`
-	JiraEmail            string `json:"JiraEmail"`
-	JiraUserKey          string `json:"JiraUserKey"`
-	GiraLastVersionCheck int64  `json:"GiraLastVersionCheck"`
 }
 
 func New() *Configuration {
@@ -36,83 +22,86 @@ func New() *Configuration {
 	}
 	configurationFilePath := filepath.Join(homeDirPath, ".gira")
 
+	var jsonConfiguration JSONConfiguration
+
 	if _, statError := os.Stat(configurationFilePath); statError != nil {
-		configuration, createConfigurationError := createConfiguration(Configuration{
-			JSON: JSONConfiguration{
-				JiraHost:             "",
-				JiraToken:            "",
-				JiraAccountID:        "",
-				JiraEmail:            "",
-				JiraUserKey:          "",
-				GiraLastVersionCheck: 0,
-			},
-			Path: configurationFilePath,
+		fileContent, createConfigurationError := updateConfiguration(configurationFilePath, JSONConfiguration{
+			Profiles:         []Profile{},
+			LastVersionCheck: 0,
 		})
 
 		if createConfigurationError != nil {
 			log.Fatalf("unable to create configuration due to %v", createConfigurationError)
 		}
-		return configuration
-	}
 
-	fileContent, readConfigurationError := readConfiguration(configurationFilePath)
-	if readConfigurationError != nil {
-		log.Fatalf("unable to read configuration in %s due to %v", configurationFilePath, readConfigurationError)
+		jsonConfiguration = *fileContent
+	} else {
+		fileContent, readConfigurationError := readConfiguration(configurationFilePath)
+		if readConfigurationError != nil {
+			log.Fatalf("unable to read configuration in %s due to %v", configurationFilePath, readConfigurationError)
+		}
+
+		jsonConfiguration = *fileContent
 	}
 
 	return &Configuration{
-		JSON: JSONConfiguration{
-			JiraHost:             fileContent.JSON.JiraHost,
-			JiraToken:            fileContent.JSON.JiraToken,
-			JiraAccountID:        fileContent.JSON.JiraAccountID,
-			JiraEmail:            fileContent.JSON.JiraEmail,
-			JiraUserKey:          fileContent.JSON.JiraUserKey,
-			GiraLastVersionCheck: fileContent.JSON.GiraLastVersionCheck,
-		},
+		JSON: jsonConfiguration,
 		Path: configurationFilePath,
 	}
 }
 
-func (configuration *Configuration) GetVersion(refreshVersionCheck bool) string {
-	if refreshVersionCheck {
-		configuration.JSON.GiraLastVersionCheck = time.Now().Unix()
-		configuration.Update()
+func (configuration *Configuration) AddProfile(newProfile Profile) error {
+	found := false
+	for index, jsonProfile := range configuration.JSON.Profiles {
+		if jsonProfile.Name == newProfile.Name {
+			configuration.JSON.Profiles[index] = newProfile
+			found = true
+			break
+		}
 	}
 
-	return strings.TrimSpace(currentVersion)
+	if !found {
+		configuration.JSON.Profiles = append(configuration.JSON.Profiles, newProfile)
+	}
+
+	_, err := updateConfiguration(configuration.Path, configuration.JSON)
+	return err
 }
 
-func (configuration *Configuration) Update() {
-	createConfiguration(*configuration)
+func (configuration *Configuration) GetProfile(name string) *Profile {
+	for _, element := range configuration.JSON.Profiles {
+		if element.Name == name {
+			return &element
+		}
+	}
+
+	return nil
 }
 
-func (configuration *Configuration) IsValid() bool {
-	parsedJiraHost, parsedJiraHostError := url.ParseRequestURI(configuration.JSON.JiraHost)
-	if parsedJiraHostError != nil {
-		return false
-	}
-
-	if parsedJiraHost.Scheme != "http" && parsedJiraHost.Scheme != "https" {
-		return false
-	}
-
-	if len(configuration.JSON.JiraToken) < 2 {
-		return false
-	}
-
-	if len(configuration.JSON.JiraEmail) < 2 {
-		return false
-	}
-
-	if len(configuration.JSON.JiraUserKey) < 2 {
-		return false
+func (configuration *Configuration) IsValid(profile *Profile) bool {
+	if profile.Type == ProfileTypeJira {
+		parsedJiraHost, parsedJiraHostError := url.ParseRequestURI(profile.Jira.Host)
+		if parsedJiraHostError != nil {
+			return false
+		}
+		if parsedJiraHost.Scheme != "http" && parsedJiraHost.Scheme != "https" {
+			return false
+		}
+		if len(profile.Jira.Token) < 2 {
+			return false
+		}
 	}
 
 	return true
 }
 
-func readConfiguration(configurationFilePath string) (*Configuration, error) {
-	rawFileContent, err := os.ReadFile(configurationFilePath)
+func (configuration *Configuration) VersionChecked() {
+	configuration.JSON.LastVersionCheck = time.Now().Unix()
+	updateConfiguration(configuration.Path, configuration.JSON)
+}
+
+func readConfiguration(path string) (*JSONConfiguration, error) {
+	rawFileContent, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -122,21 +111,18 @@ func readConfiguration(configurationFilePath string) (*Configuration, error) {
 		return nil, err
 	}
 
-	return &Configuration{
-		JSON: fileContent,
-		Path: configurationFilePath,
-	}, nil
+	return &fileContent, nil
 }
 
-func createConfiguration(configuration Configuration) (*Configuration, error) {
-	jsonFileContent, err := json.Marshal(configuration.JSON)
+func updateConfiguration(path string, jsonConfiguration JSONConfiguration) (*JSONConfiguration, error) {
+	jsonFileContent, err := json.Marshal(jsonConfiguration)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create json configuration : %v", err)
+		return nil, fmt.Errorf("failed to marshal new json configuration : %v", err)
 	}
 
-	file, err := os.Create(configuration.Path)
+	file, err := os.Create(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create json configuration file : %v", err)
 	}
 	defer file.Close()
 
@@ -144,5 +130,5 @@ func createConfiguration(configuration Configuration) (*Configuration, error) {
 		return nil, err
 	}
 
-	return &configuration, nil
+	return &jsonConfiguration, nil
 }
