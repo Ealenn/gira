@@ -19,7 +19,9 @@ Use Gira to speed up development workflows, reduce copy-pasting from Jira to Git
     - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
   - [✨ Shell Autocompletion](#-shell-autocompletion)
   - [🚀 Usage](#-usage)
-    - [⚙️ `config`: Configure Gira with Jira account and API token](#️-config-configure-gira-with-jira-account-and-api-token)
+    - [⚙️ `config`: Configure Gira profile with accounts and tokens](#️-config-configure-gira-profile-with-accounts-and-tokens)
+      - [Default Profile](#default-profile)
+      - [Custom Profiles](#custom-profiles)
     - [🌱 `branch`: Create a new Git branch using Jira issue ID](#-branch-create-a-new-git-branch-using-jira-issue-id)
       - [Usage](#usage)
       - [Example](#example)
@@ -122,17 +124,18 @@ Usage:
   gira [command]
 
 Available Commands:
-  branch      Create a new Git branch using Jira issue ID
+  branch      Create a new Git branch using issue
   completion  Generate the autocompletion script for the specified shell
-  config      Configure Gira with Jira account and API token
+  config      Configure Gira with accounts and tokens
   help        Help about any command
-  issue       Show details of a Jira issue (from current branch or specified issue ID)
+  issue       Show details of an issue (from current branch or specified issue ID)
   version     Display the current Gira version and check for available updates
 
 Flags:
-  -h, --help      help for gira
-      --verbose   Print detailed operation logs and debug information
-  -v, --version   version for gira
+  -h, --help             help for gira
+      --profile string   Configuration profile to use (default "default")
+      --verbose          Print detailed operation logs and debug information
+  -v, --version          version for gira
 
 Use "gira [command] --help" for more information about a command.
 ```
@@ -145,21 +148,46 @@ Example :
 ```sh
 ❯ gira branch TEST-123 --verbose
 [DEBUG] Issue TEST-123 response status 404 
-[FATAL] Unable to find Jira TEST-123
+[FATAL] Unable to find issue TEST-123
 ```
 
-### ⚙️ `config`: Configure Gira with Jira account and API token
+### ⚙️ `config`: Configure Gira profile with accounts and tokens
 
-Configures the Gira CLI by setting up the Jira account credentials, including the Jira host URL, email, and API token.
-This command updates the configuration file to enable communication with the Jira instance for subsequent commands like 'branch'.
-Ensure you have a valid Jira API token from your Atlassian account before running this command.
+The `gira config` command sets up the Gira CLI by allowing you to configure one or more accounts, each with its own credentials. You can create multiple profiles to connect to different sources, making it easy to switch between environments or accounts.
+
+For each profile, you'll provide the Jira host URL and API token. This information is stored in your configuration file and enables Gira to communicate with the specified Jira instance when running commands like `branch` or `issue`.
+
+#### Default Profile
+
+Running `gira config` with no additional arguments will set up or update your default profile:
 
 ```
 ❯ gira config
-Enter the Jira API URL (Example https://jira.mycompagny.com): https://jira.mycompagny.com
-Enter the Jira Token (See /manage-profile/security/api-tokens): **********
+Enter the Jira API URL : https://jira.mycompany.com
+Enter the Jira Token : **********
 ✅ Done!
 ```
+
+#### Custom Profiles
+
+You can also configure custom profiles and use them in any Gira command by specifying the `--profile` option.
+
+This is useful if you need to work with multiple Jira instances or accounts.
+
+```
+❯ gira config --profile perso
+Enter the Jira API URL : https://jira.personal.com
+Enter the Jira Token : **********
+✅ Done!
+```
+
+Once configured, you can specify the profile in other commands:
+
+```
+❯ gira branch --profile perso
+```
+
+This flexibility allows you to easily manage and switch between multiple Jira accounts or environments as needed.
 
 ### 🌱 `branch`: Create a new Git branch using Jira issue ID
 
@@ -172,17 +200,17 @@ This helps enforce consistent naming conventions and improve traceability betwee
 #### Usage 
 ```
 Usage:
-  gira branch [Jira Issue ID] [flags]
-
-Examples:
-gira branch ISSUE-123
-gira branch -a ISSUE-123
+  gira branch [issue] [flags]
 
 Aliases:
   branch, checkout
 
+Examples:
+  gira branch ISSUE-123
+  gira branch -a ISSUE-123
+
 Flags:
-  -a, --assign   assign the issue to the currently logged-in Jira user after creating the Git branch
+  -a, --assign   assign the issue to the currently logged-in user after creating the Git branch
   -f, --force    disable interactive prompts and force branch creation even if checks would normally prevent it
   -h, --help     help for branch
 ```

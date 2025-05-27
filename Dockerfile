@@ -7,7 +7,7 @@ ARG VERSION
 WORKDIR /app
 COPY . .
 
-RUN echo $VERSION > /app/internal/configuration/version
+RUN echo $VERSION > /app/internal/version/version
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" /app/cmd/...
 
 ###################################################

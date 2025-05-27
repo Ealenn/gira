@@ -13,35 +13,35 @@ import (
 )
 
 type JiraService struct {
-	Client        *v2.Client
-	Configuration *configuration.Configuration
+	client  *v2.Client
+	profile *configuration.Profile
 }
 
-func NewJiraService(configuration *configuration.Configuration) *JiraService {
+func NewJiraService(profile *configuration.Profile) *JiraService {
 	client, err := v2.New(&http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-	}, configuration.JSON.JiraHost)
+	}, profile.Jira.Host)
 
 	if err != nil {
 		log.Fatalf("Failed to create Jira client: %v", err)
 	}
 
-	if configuration.JSON.JiraEmail != "" {
-		client.Auth.SetBasicAuth(configuration.JSON.JiraEmail, configuration.JSON.JiraToken)
+	if profile.Jira.Email != "" {
+		client.Auth.SetBasicAuth(profile.Jira.Email, profile.Jira.Token)
 	} else {
-		client.Auth.SetBearerToken(configuration.JSON.JiraToken)
+		client.Auth.SetBearerToken(profile.Jira.Token)
 	}
 
 	return &JiraService{
-		Client:        client,
-		Configuration: configuration,
+		client:  client,
+		profile: profile,
 	}
 }
 
 func (jiraService *JiraService) GetIssue(issueKeyID string) (*models.IssueSchemeV2, *models.ResponseScheme) {
-	issue, response, err := jiraService.Client.Issue.Get(context.Background(), issueKeyID, nil, nil)
+	issue, response, err := jiraService.client.Issue.Get(context.Background(), issueKeyID, nil, nil)
 
 	if err != nil {
 		return nil, response
@@ -51,7 +51,7 @@ func (jiraService *JiraService) GetIssue(issueKeyID string) (*models.IssueScheme
 }
 
 func (jiraService *JiraService) GetMyself() (*models.UserScheme, error) {
-	user, _, userError := jiraService.Client.MySelf.Details(context.Background(), []string{})
+	user, _, userError := jiraService.client.MySelf.Details(context.Background(), []string{})
 	if userError != nil {
 		return nil, userError
 	}
@@ -62,17 +62,17 @@ func (jiraService *JiraService) AssignIssue(issueKeyID string) error {
 	ctx := context.Background()
 
 	// For Jira Cloud, use AccountID
-	if jiraService.Configuration.JSON.JiraAccountID != "" {
-		_, err := jiraService.Client.Issue.Assign(ctx, issueKeyID, jiraService.Configuration.JSON.JiraAccountID)
+	if jiraService.profile.Jira.AccountID != "" {
+		_, err := jiraService.client.Issue.Assign(ctx, issueKeyID, jiraService.profile.Jira.AccountID)
 		return err
 	}
 
 	// For Jira Server/Data Center, use User Key or Name
-	_, err := jiraService.Client.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
+	_, err := jiraService.client.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
 			Assignee: &models.UserScheme{
-				Key:  jiraService.Configuration.JSON.JiraUserKey,
-				Name: jiraService.Configuration.JSON.JiraUserKey,
+				Key:  jiraService.profile.Jira.UserKey,
+				Name: jiraService.profile.Jira.UserKey,
 			},
 		},
 	}, nil, nil)

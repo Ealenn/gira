@@ -5,8 +5,12 @@ import (
 	"github.com/Ealenn/gira/internal/logs"
 )
 
-func CheckConfiguration(logger *logs.Logger, configuration *configuration.Configuration) {
-	if !configuration.IsValid() {
-		logger.Fatal("⚠️  %s\nPlease run the %s command or change your configuration here %s", "Gira configuration is invalid", "gira config", configuration.Path)
+func CheckConfiguration(logger *logs.Logger, profile *configuration.Profile, configuration *configuration.Configuration) {
+	if profile == nil {
+		logger.Fatal("⚠️  %s\nProfile doesn't exist", "Unable to load profile configuration")
+	}
+
+	if !configuration.IsValid(profile) {
+		logger.Fatal("⚠️  %s\nPlease run the %s command or change your configuration here %s", "Profile \""+profile.Name+"\" configuration is invalid", "gira config --profile "+profile.Name, configuration.Path)
 	}
 }

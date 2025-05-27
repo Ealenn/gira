@@ -13,47 +13,85 @@ import (
 	"github.com/charmbracelet/x/term"
 )
 
-func Config(configuration *configuration.Configuration, logger *logs.Logger) {
-	reader := bufio.NewReader(os.Stdin)
+type Config struct {
+	logger        *logs.Logger
+	configuration *configuration.Configuration
+	profile       *configuration.Profile
+}
 
-	logger.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
-	if configuration.JSON.JiraHost != "" {
-		logger.Info("[%s]", configuration.JSON.JiraHost)
+func NewConfig(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Config {
+	return &Config{
+		logger:        logger,
+		configuration: configuration,
+		profile:       profile,
+	}
+}
+
+func (command Config) Run(profileName string, list bool) {
+	if list {
+		for _, profile := range command.configuration.JSON.Profiles {
+			switch profile.Type {
+			case configuration.ProfileTypeJira:
+				command.logger.Info("- [%s] Type %s, user %s", profile.Name, profile.Type, profile.Jira.Email)
+			}
+		}
+		return
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	if command.profile == nil {
+		command.logger.Info("Create new profile : %s", profileName)
+		command.profile = &configuration.Profile{
+			Name: profileName,
+			Type: configuration.ProfileTypeJira,
+			Jira: configuration.Jira{
+				Host:  "",
+				Token: "",
+			},
+		}
+	} else {
+		command.logger.Info("Update profile : %s", profileName)
+	}
+
+	command.logger.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
+	if command.profile.Jira.Host != "" {
+		command.logger.Info("[%s]", command.profile.Jira.Host)
 	}
 	inputJiraHost, _ := reader.ReadString('\n')
 	inputJiraHost = strings.TrimSpace(inputJiraHost)
 	if inputJiraHost == "" {
-		inputJiraHost = configuration.JSON.JiraHost
+		inputJiraHost = command.profile.Jira.Host
 	}
 	if !isValidURLRegex(inputJiraHost) {
-		logger.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
+		command.logger.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
 	}
-	configuration.JSON.JiraHost = inputJiraHost
+	command.profile.Jira.Host = inputJiraHost
 
-	logger.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
-	if configuration.JSON.JiraToken != "" {
-		logger.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
+	command.logger.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
+	if command.profile.Jira.Token != "" {
+		command.logger.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
 	}
 	inputJiraTokenBytes, _ := term.ReadPassword(os.Stdin.Fd())
 	inputJiraToken := strings.TrimSpace(string(inputJiraTokenBytes))
 	if inputJiraToken == "" {
-		inputJiraToken = configuration.JSON.JiraToken
+		inputJiraToken = command.profile.Jira.Token
 	}
-	configuration.JSON.JiraToken = inputJiraToken
+	command.profile.Jira.Token = inputJiraToken
 
-	jiraService := services.NewJiraService(configuration)
+	jiraService := services.NewJiraService(command.profile)
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
 	if jiraUserError != nil {
-		logger.Fatal("❌ Unable to fetch Jira account in %s due to : %v", inputJiraHost, jiraUserError)
+		command.logger.Debug("Unable to fetch user accound due to %v", jiraUserError)
+		command.logger.Fatal("❌ Unable to fetch Jira account in %s.", inputJiraHost)
 	}
 
-	configuration.JSON.JiraEmail = jiraUser.EmailAddress
-	configuration.JSON.JiraAccountID = jiraUser.AccountID
-	configuration.JSON.JiraUserKey = jiraUser.Key
+	command.profile.Jira.Email = jiraUser.EmailAddress
+	command.profile.Jira.AccountID = jiraUser.AccountID
+	command.profile.Jira.UserKey = jiraUser.Key
 
-	configuration.Update()
-	logger.Info("✅ Done!")
+	command.configuration.AddProfile(*command.profile)
+	command.logger.Info("✅ Done!")
 }
 
 func isValidURLRegex(url string) bool {
