@@ -1,4 +1,4 @@
-package services
+package service
 
 import (
 	"encoding/json"
@@ -6,22 +6,22 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Ealenn/gira/internal/logs"
+	"github.com/Ealenn/gira/internal/log"
 )
 
 var client = &http.Client{Timeout: 10 * time.Second}
 
-type GitHubService struct {
-	logger *logs.Logger
+type GitHub struct {
+	logger *log.Logger
 }
 
-func NewGitHubService(logger *logs.Logger) *GitHubService {
-	return &GitHubService{
+func NewGitHub(logger *log.Logger) *GitHub {
+	return &GitHub{
 		logger,
 	}
 }
 
-func (githubService *GitHubService) GetLatestRelease() (*GithubLatestReleaseResponse, error) {
+func (github *GitHub) GetLatestRelease() (*GithubLatestReleaseResponse, error) {
 	githubReleaseResponse := &GithubLatestReleaseResponse{}
 	err := getJSON("https://api.github.com/repos/Ealenn/gira/releases/latest", githubReleaseResponse)
 

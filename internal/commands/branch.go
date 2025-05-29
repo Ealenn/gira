@@ -8,25 +8,25 @@ import (
 	"strings"
 
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
-	"github.com/Ealenn/gira/internal/services"
+	"github.com/Ealenn/gira/internal/log"
+	"github.com/Ealenn/gira/internal/service"
 )
 
 type Branch struct {
-	logger        *logs.Logger
+	logger        *log.Logger
 	configuration *configuration.Configuration
 	profile       *configuration.Profile
-	jiraService   *services.JiraService
-	gitService    *services.GitService
+	jiraService   *service.Jira
+	gitService    *service.Git
 }
 
-func NewBranch(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Branch {
+func NewBranch(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Branch {
 	return &Branch{
 		logger:        logger,
 		configuration: configuration,
 		profile:       profile,
-		jiraService:   services.NewJiraService(profile),
-		gitService:    services.NewGitService(logger),
+		jiraService:   service.NewJira(logger, profile),
+		gitService:    service.NewGit(logger),
 	}
 }
 
@@ -43,7 +43,7 @@ func (command Branch) Run(issueID string, assign bool, force bool) {
 		command.logger.Warn("❌ Branch named %s already exists", branchName)
 
 		if !force {
-			command.logger.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", logs.ErrorStyle.Render("CTRL+C"))
+			command.logger.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", log.ErrorStyle.Render("CTRL+C"))
 			bufio.NewReader(os.Stdin).ReadLine()
 		}
 
@@ -51,7 +51,7 @@ func (command Branch) Run(issueID string, assign bool, force bool) {
 		command.logger.Info("✅ %s has just been checkout", branchName)
 	} else {
 		if !force {
-			command.logger.Info("🌳 Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", logs.ErrorStyle.Render("CTRL+C"))
+			command.logger.Info("🌳 Branch %s will be generated\nPress %s to continue, %s to cancel", branchName, "ENTER", log.ErrorStyle.Render("CTRL+C"))
 			bufio.NewReader(os.Stdin).ReadLine()
 		}
 
@@ -62,7 +62,7 @@ func (command Branch) Run(issueID string, assign bool, force bool) {
 	if assign {
 		if assignError := command.jiraService.AssignIssue(issueID); assignError != nil {
 			command.logger.Debug("%v", assignError)
-			command.logger.Info("❌ %s Unable to assign issue %s to %s...", logs.ErrorStyle.Render("Oups..."), issueID, command.profile.Jira.UserKey)
+			command.logger.Info("❌ %s Unable to assign issue %s to %s...", log.ErrorStyle.Render("Oups..."), issueID, command.profile.Jira.UserKey)
 		} else {
 			command.logger.Info("✅ Jira %s has been assigned to %s", issueID, command.profile.Jira.UserKey)
 		}

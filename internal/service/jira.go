@@ -1,23 +1,24 @@
-package services
+package service
 
 import (
 	"context"
 	"crypto/tls"
-	"log"
 	"net/http"
 
 	"github.com/Ealenn/gira/internal/configuration"
+	"github.com/Ealenn/gira/internal/log"
 
 	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 )
 
-type JiraService struct {
+type Jira struct {
+	logger  *log.Logger
 	client  *v2.Client
 	profile *configuration.Profile
 }
 
-func NewJiraService(profile *configuration.Profile) *JiraService {
+func NewJira(logger *log.Logger, profile *configuration.Profile) *Jira {
 	client, err := v2.New(&http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -25,7 +26,8 @@ func NewJiraService(profile *configuration.Profile) *JiraService {
 	}, profile.Jira.Host)
 
 	if err != nil {
-		log.Fatalf("Failed to create Jira client: %v", err)
+		logger.Debug("Jira client error: %v", err)
+		logger.Fatal("Unable to create Jira Client")
 	}
 
 	if profile.Jira.Email != "" {
@@ -34,14 +36,15 @@ func NewJiraService(profile *configuration.Profile) *JiraService {
 		client.Auth.SetBearerToken(profile.Jira.Token)
 	}
 
-	return &JiraService{
+	return &Jira{
+		logger:  logger,
 		client:  client,
 		profile: profile,
 	}
 }
 
-func (jiraService *JiraService) GetIssue(issueKeyID string) (*models.IssueSchemeV2, *models.ResponseScheme) {
-	issue, response, err := jiraService.client.Issue.Get(context.Background(), issueKeyID, nil, nil)
+func (jira *Jira) GetIssue(issueKeyID string) (*models.IssueSchemeV2, *models.ResponseScheme) {
+	issue, response, err := jira.client.Issue.Get(context.Background(), issueKeyID, nil, nil)
 
 	if err != nil {
 		return nil, response
@@ -50,29 +53,29 @@ func (jiraService *JiraService) GetIssue(issueKeyID string) (*models.IssueScheme
 	return issue, response
 }
 
-func (jiraService *JiraService) GetMyself() (*models.UserScheme, error) {
-	user, _, userError := jiraService.client.MySelf.Details(context.Background(), []string{})
+func (jira *Jira) GetMyself() (*models.UserScheme, error) {
+	user, _, userError := jira.client.MySelf.Details(context.Background(), []string{})
 	if userError != nil {
 		return nil, userError
 	}
 	return user, nil
 }
 
-func (jiraService *JiraService) AssignIssue(issueKeyID string) error {
+func (jira *Jira) AssignIssue(issueKeyID string) error {
 	ctx := context.Background()
 
 	// For Jira Cloud, use AccountID
-	if jiraService.profile.Jira.AccountID != "" {
-		_, err := jiraService.client.Issue.Assign(ctx, issueKeyID, jiraService.profile.Jira.AccountID)
+	if jira.profile.Jira.AccountID != "" {
+		_, err := jira.client.Issue.Assign(ctx, issueKeyID, jira.profile.Jira.AccountID)
 		return err
 	}
 
 	// For Jira Server/Data Center, use User Key or Name
-	_, err := jiraService.client.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
+	_, err := jira.client.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
 			Assignee: &models.UserScheme{
-				Key:  jiraService.profile.Jira.UserKey,
-				Name: jiraService.profile.Jira.UserKey,
+				Key:  jira.profile.Jira.UserKey,
+				Name: jira.profile.Jira.UserKey,
 			},
 		},
 	}, nil, nil)

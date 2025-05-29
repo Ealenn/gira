@@ -3,22 +3,24 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/Ealenn/gira/internal/log"
 )
 
 type Configuration struct {
-	JSON JSONConfiguration
-	Path string
+	logger *log.Logger
+	JSON   JSONConfiguration
+	Path   string
 }
 
-func New() *Configuration {
+func New(logger *log.Logger) *Configuration {
 	homeDirPath, homeDirPathError := os.UserHomeDir()
 	if homeDirPathError != nil {
-		log.Fatalf("unable to find home directory %v", homeDirPathError)
+		logger.Fatal("unable to find home directory %v", homeDirPathError)
 	}
 	configurationFilePath := filepath.Join(homeDirPath, ".gira")
 
@@ -31,22 +33,23 @@ func New() *Configuration {
 		})
 
 		if createConfigurationError != nil {
-			log.Fatalf("unable to create configuration due to %v", createConfigurationError)
+			logger.Fatal("unable to create configuration due to %v", createConfigurationError)
 		}
 
 		jsonConfiguration = *fileContent
 	} else {
 		fileContent, readConfigurationError := readConfiguration(configurationFilePath)
 		if readConfigurationError != nil {
-			log.Fatalf("unable to read configuration in %s due to %v", configurationFilePath, readConfigurationError)
+			logger.Fatal("unable to read configuration in %s due to %v", configurationFilePath, readConfigurationError)
 		}
 
 		jsonConfiguration = *fileContent
 	}
 
 	return &Configuration{
-		JSON: jsonConfiguration,
-		Path: configurationFilePath,
+		logger: logger,
+		JSON:   jsonConfiguration,
+		Path:   configurationFilePath,
 	}
 }
 

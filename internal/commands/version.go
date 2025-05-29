@@ -4,25 +4,25 @@ import (
 	"time"
 
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
-	"github.com/Ealenn/gira/internal/services"
+	"github.com/Ealenn/gira/internal/log"
+	"github.com/Ealenn/gira/internal/service"
 	"github.com/Ealenn/gira/internal/version"
 )
 
 type Version struct {
-	logger        *logs.Logger
+	logger        *log.Logger
 	configuration *configuration.Configuration
 	version       *version.Version
 	profile       *configuration.Profile
-	githubService *services.GitHubService
+	githubService *service.GitHub
 }
 
-func NewVersion(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Version {
+func NewVersion(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Version {
 	return &Version{
 		logger:        logger,
 		configuration: configuration,
 		profile:       profile,
-		githubService: services.NewGitHubService(logger),
+		githubService: service.NewGitHub(logger),
 	}
 }
 
@@ -37,7 +37,7 @@ func (command Version) Run() {
 		return
 	}
 
-	command.logger.Info("Latest version on GitHub: %s %s", githubLastRelease.TagName, logs.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
+	command.logger.Info("Latest version on GitHub: %s %s", githubLastRelease.TagName, log.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
 
 	if currentVersion == githubLastRelease.TagName {
 		command.logger.Info("\n🚀 Gira is up to date.")

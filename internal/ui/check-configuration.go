@@ -1,11 +1,12 @@
 package ui
 
 import (
+	"github.com/Ealenn/gira/internal/log"
+
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
 )
 
-func CheckConfiguration(logger *logs.Logger, profile *configuration.Profile, configuration *configuration.Configuration) {
+func CheckConfiguration(logger *log.Logger, profile *configuration.Profile, configuration *configuration.Configuration) {
 	if profile == nil {
 		logger.Fatal("⚠️  %s\nProfile doesn't exist", "Unable to load profile configuration")
 	}

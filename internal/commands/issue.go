@@ -5,25 +5,25 @@ import (
 	"strings"
 
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
-	"github.com/Ealenn/gira/internal/services"
+	"github.com/Ealenn/gira/internal/log"
+	"github.com/Ealenn/gira/internal/service"
 )
 
 type Issue struct {
-	logger        *logs.Logger
+	logger        *log.Logger
 	configuration *configuration.Configuration
 	profile       *configuration.Profile
-	gitService    *services.GitService
-	jiraService   *services.JiraService
+	gitService    *service.Git
+	jiraService   *service.Jira
 }
 
-func NewIssue(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Issue {
+func NewIssue(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Issue {
 	return &Issue{
 		logger:        logger,
 		configuration: configuration,
 		profile:       profile,
-		gitService:    services.NewGitService(logger),
-		jiraService:   services.NewJiraService(profile),
+		gitService:    service.NewGit(logger),
+		jiraService:   service.NewJira(logger, profile),
 	}
 }
 
@@ -55,15 +55,15 @@ func (command Issue) Run(optionalIssueID *string) {
 		command.logger.Fatal("❌ Unable to find issue %s", issueID)
 	}
 
-	command.logger.Log("%s: %s", logs.InfoStyle.Render("Summary"), issue.Fields.Summary)
-	command.logger.Log("%s: %s - %s: %s - %s: %s", logs.InfoStyle.Render("Type"), issue.Fields.IssueType.Name, logs.InfoStyle.Render("Priority"), issue.Fields.Priority.Name, logs.InfoStyle.Render("Status"), issue.Fields.Status.Name)
+	command.logger.Log("%s: %s", log.InfoStyle.Render("Summary"), issue.Fields.Summary)
+	command.logger.Log("%s: %s - %s: %s - %s: %s", log.InfoStyle.Render("Type"), issue.Fields.IssueType.Name, log.InfoStyle.Render("Priority"), issue.Fields.Priority.Name, log.InfoStyle.Render("Status"), issue.Fields.Status.Name)
 	if issue.Fields.Assignee != nil {
-		command.logger.Log("%s: %s <%s>", logs.InfoStyle.Render("Assignee"), issue.Fields.Assignee.DisplayName, issue.Fields.Assignee.EmailAddress)
+		command.logger.Log("%s: %s <%s>", log.InfoStyle.Render("Assignee"), issue.Fields.Assignee.DisplayName, issue.Fields.Assignee.EmailAddress)
 	}
 
 	description := regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(string(issue.Fields.Description), "$1 $2")
 	description = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(description, "$1")
-	command.logger.Log("%s: \n%s", logs.InfoStyle.Render("Description"), description)
+	command.logger.Log("%s: \n%s", log.InfoStyle.Render("Description"), description)
 
 	command.logger.Info("\n🔗 More %s%s%s", command.profile.Jira.Host, "/browse/", issue.Key)
 }
