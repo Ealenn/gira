@@ -7,19 +7,19 @@ import (
 	"strings"
 
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
-	"github.com/Ealenn/gira/internal/services"
+	"github.com/Ealenn/gira/internal/log"
+	"github.com/Ealenn/gira/internal/service"
 
 	"github.com/charmbracelet/x/term"
 )
 
 type Config struct {
-	logger        *logs.Logger
+	logger        *log.Logger
 	configuration *configuration.Configuration
 	profile       *configuration.Profile
 }
 
-func NewConfig(logger *logs.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Config {
+func NewConfig(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Config {
 	return &Config{
 		logger:        logger,
 		configuration: configuration,
@@ -78,7 +78,7 @@ func (command Config) Run(profileName string, list bool) {
 	}
 	command.profile.Jira.Token = inputJiraToken
 
-	jiraService := services.NewJiraService(command.profile)
+	jiraService := service.NewJira(command.logger, command.profile)
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
 	if jiraUserError != nil {

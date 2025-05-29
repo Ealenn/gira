@@ -6,7 +6,7 @@ import (
 
 	"github.com/Ealenn/gira/internal/commands"
 	"github.com/Ealenn/gira/internal/configuration"
-	"github.com/Ealenn/gira/internal/logs"
+	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/ui"
 	"github.com/Ealenn/gira/internal/version"
 
@@ -17,7 +17,7 @@ var verbose bool
 var profile *configuration.Profile
 var currentProfileName string
 
-func preRun(logger *logs.Logger, configuration *configuration.Configuration, version *version.Version) {
+func preRun(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) {
 	profile = configuration.GetProfile(currentProfileName)
 	logger.Debug("Current Profile Name : %s", currentProfileName)
 	logger.Debug("Profile exist : %s", strconv.FormatBool(profile != nil))
@@ -27,9 +27,9 @@ func preRun(logger *logs.Logger, configuration *configuration.Configuration, ver
 }
 
 func main() {
+	logger := log.New(&verbose)
 	version := version.New()
-	configuration := configuration.New()
-	logger := logs.New(&verbose)
+	configuration := configuration.New(logger)
 
 	rootCmd := &cobra.Command{
 		Use:     "gira",
