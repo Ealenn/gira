@@ -22,7 +22,7 @@ func preRun(logger *log.Logger, configuration *configuration.Configuration, vers
 	logger.Debug("Current Profile Name : %s", currentProfileName)
 	logger.Debug("Profile exist : %s", strconv.FormatBool(profile != nil))
 
-	ui.CheckConfiguration(logger, profile, configuration)
+	ui.CheckConfiguration(logger, configuration, currentProfileName, profile)
 	ui.CheckUpdate(logger, configuration, version)
 }
 

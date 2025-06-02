@@ -6,9 +6,9 @@ import (
 	"github.com/Ealenn/gira/internal/configuration"
 )
 
-func CheckConfiguration(logger *log.Logger, profile *configuration.Profile, configuration *configuration.Configuration) {
+func CheckConfiguration(logger *log.Logger, configuration *configuration.Configuration, profileName string, profile *configuration.Profile) {
 	if profile == nil {
-		logger.Fatal("⚠️  %s\nProfile doesn't exist", "Unable to load profile configuration")
+		logger.Fatal("⚠️  %s\nProfile %s doesn't exist", "Unable to load profile configuration", profileName)
 	}
 
 	if !configuration.IsValid(profile) {
