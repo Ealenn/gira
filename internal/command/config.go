@@ -9,9 +9,9 @@ import (
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/service"
-	"github.com/manifoldco/promptui"
 
 	"github.com/charmbracelet/x/term"
+	"github.com/manifoldco/promptui"
 )
 
 type Config struct {

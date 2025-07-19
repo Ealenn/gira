@@ -11,6 +11,7 @@ import (
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/service"
+
 	"github.com/manifoldco/promptui"
 )
 
