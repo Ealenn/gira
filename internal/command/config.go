@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/service"
+	"github.com/manifoldco/promptui"
 
 	"github.com/charmbracelet/x/term"
 )
@@ -33,17 +34,20 @@ func (command Config) Run(profileName string, list bool) {
 			switch profile.Type {
 			case configuration.ProfileTypeJira:
 				command.logger.Info("- [%s] Type %s, user %s", profile.Name, profile.Type, profile.Jira.Email)
+			case configuration.ProfileTypeGithub:
+				command.logger.Info("- [%s] Type %s, user %s", profile.Name, profile.Type, profile.Github.User)
 			}
 		}
 		return
 	}
 
-	reader := bufio.NewReader(os.Stdin)
 	if command.profile == nil {
 		command.logger.Info("Create new profile : %s", profileName)
+
+		profileType := command.selectProfileType()
 		command.profile = &configuration.Profile{
 			Name: profileName,
-			Type: configuration.ProfileTypeJira,
+			Type: profileType,
 			Jira: configuration.Jira{
 				Host:  "",
 				Token: "",
@@ -53,6 +57,20 @@ func (command Config) Run(profileName string, list bool) {
 		command.logger.Info("Update profile : %s", profileName)
 	}
 
+	if command.profile.Type == configuration.ProfileTypeJira {
+		command.createOrUpdateJiraProfile()
+	} else {
+		command.createOrUpdateGithubProfile()
+	}
+
+	command.configuration.AddProfile(*command.profile)
+	command.logger.Info("✅ Done!")
+}
+
+func (command Config) createOrUpdateJiraProfile() {
+	reader := bufio.NewReader(os.Stdin)
+
+	// Jira Endpoint
 	command.logger.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
 	if command.profile.Jira.Host != "" {
 		command.logger.Info("[%s]", command.profile.Jira.Host)
@@ -67,6 +85,7 @@ func (command Config) Run(profileName string, list bool) {
 	}
 	command.profile.Jira.Host = inputJiraHost
 
+	// Jira Token
 	command.logger.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
 	if command.profile.Jira.Token != "" {
 		command.logger.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
@@ -78,6 +97,7 @@ func (command Config) Run(profileName string, list bool) {
 	}
 	command.profile.Jira.Token = inputJiraToken
 
+	// Jira Profile
 	jiraService := service.NewJira(command.logger, command.profile)
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
@@ -89,9 +109,38 @@ func (command Config) Run(profileName string, list bool) {
 	command.profile.Jira.Email = jiraUser.EmailAddress
 	command.profile.Jira.AccountID = jiraUser.AccountID
 	command.profile.Jira.UserKey = jiraUser.Key
+}
 
-	command.configuration.AddProfile(*command.profile)
-	command.logger.Info("✅ Done!")
+func (command Config) createOrUpdateGithubProfile() {
+	reader := bufio.NewReader(os.Stdin)
+
+	// Github Username
+	command.logger.Info("Enter your Github %s (Example %s):", "Username", "ealenn")
+	if command.profile.Github.User != "" {
+		command.logger.Info("[%s]", command.profile.Github.User)
+	}
+	inputGithubUser, _ := reader.ReadString('\n')
+	inputGithubUser = strings.TrimSpace(inputGithubUser)
+	if inputGithubUser == "" {
+		inputGithubUser = command.profile.Github.User
+	}
+
+	command.profile.Github.User = inputGithubUser
+}
+
+func (command Config) selectProfileType() string {
+	prompt := promptui.Select{
+		Label: "Type",
+		Items: []string{configuration.ProfileTypeJira, configuration.ProfileTypeGithub},
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		command.logger.Fatal("The operation was %s", "canceled")
+	}
+
+	return result
 }
 
 func isValidURLRegex(url string) bool {

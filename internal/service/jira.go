@@ -19,6 +19,14 @@ type Jira struct {
 }
 
 func NewJira(logger *log.Logger, profile *configuration.Profile) *Jira {
+	if profile.Type != configuration.ProfileTypeJira {
+		return &Jira{
+			logger:  logger,
+			client:  nil,
+			profile: profile,
+		}
+	}
+
 	client, err := v2.New(&http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

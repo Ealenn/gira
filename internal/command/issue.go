@@ -1,7 +1,8 @@
-package commands
+package command
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/Ealenn/gira/internal/configuration"
@@ -15,6 +16,7 @@ type Issue struct {
 	profile       *configuration.Profile
 	gitService    *service.Git
 	jiraService   *service.Jira
+	githubService *service.GitHub
 }
 
 func NewIssue(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Issue {
@@ -24,6 +26,7 @@ func NewIssue(logger *log.Logger, configuration *configuration.Configuration, pr
 		profile:       profile,
 		gitService:    service.NewGit(logger),
 		jiraService:   service.NewJira(logger, profile),
+		githubService: service.NewGitHub(logger),
 	}
 }
 
@@ -45,10 +48,19 @@ func (command Issue) Run(optionalIssueID *string) {
 		}
 
 		issueID = branchNameParts[1]
+		command.logger.Debug("🔎 Issue %s", issueID)
 	}
 
-	command.logger.Debug("🔎 Issue %s", issueID)
+	if command.profile.Type == configuration.ProfileTypeJira {
+		command.showJiraIssue(issueID)
+	}
 
+	if command.profile.Type == configuration.ProfileTypeGithub {
+		command.showGithubIssue(issueID)
+	}
+}
+
+func (command Issue) showJiraIssue(issueID string) {
 	issue, issueResponse := command.jiraService.GetIssue(issueID)
 	if issue == nil {
 		command.logger.Debug("Issue %s response status %s", issueID, issueResponse.Status)
@@ -66,4 +78,34 @@ func (command Issue) Run(optionalIssueID *string) {
 	command.logger.Log("%s: \n%s", log.InfoStyle.Render("Description"), description)
 
 	command.logger.Info("\n🔗 More %s%s%s", command.profile.Jira.Host, "/browse/", issue.Key)
+}
+
+func (command Issue) showGithubIssue(issueID string) {
+	issueNumber, err := strconv.Atoi(issueID)
+	if err != nil {
+		command.logger.Fatal("Github issue ID %s invalid !", issueID)
+	}
+
+	issue, issueErr := command.githubService.GetIssue(issueNumber)
+	if issueErr != nil {
+		command.logger.Debug("Issue %s error %s", issueID, issueErr)
+		command.logger.Fatal("❌ Unable to find issue %s", issueID)
+	}
+
+	command.logger.Log("%s: %s", log.InfoStyle.Render("Summary"), issue.GetTitle())
+
+	labels := []string{}
+	for _, element := range issue.Labels {
+		labels = append(labels, *element.Name)
+	}
+	command.logger.Log("%s: %s - %s: %s", log.InfoStyle.Render("Type"), labels, log.InfoStyle.Render("State"), issue.GetState())
+	if issue.GetAssignee() != nil {
+		command.logger.Log("%s: %s <%s>", log.InfoStyle.Render("Assignee"), issue.GetAssignee().GetLogin(), issue.GetAssignee().GetEmail())
+	}
+
+	description := regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(string(issue.GetBody()), "$1 $2")
+	description = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(description, "$1")
+	command.logger.Log("%s: \n%s", log.InfoStyle.Render("Description"), description)
+
+	command.logger.Info("\n🔗 More %s", issue.GetHTMLURL())
 }
