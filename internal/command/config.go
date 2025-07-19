@@ -63,7 +63,10 @@ func (command Config) Run(profileName string, list bool) {
 		command.createOrUpdateGithubProfile()
 	}
 
-	command.configuration.AddProfile(*command.profile)
+	err := command.configuration.AddProfile(*command.profile)
+	if err != nil {
+		command.logger.Fatal("❌ Unable to save configuration")
+	}
 	command.logger.Info("✅ Done!")
 }
 
