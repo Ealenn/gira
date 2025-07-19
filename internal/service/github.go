@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Ealenn/gira/internal/log"
+
 	"github.com/google/go-github/v73/github"
 )
 
