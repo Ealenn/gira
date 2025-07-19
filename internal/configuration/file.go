@@ -1,7 +1,8 @@
 package configuration
 
 const (
-	ProfileTypeJira = "JIRA"
+	ProfileTypeJira   = "JIRA"
+	ProfileTypeGithub = "GITHUB"
 )
 
 type JSONConfiguration struct {
@@ -10,9 +11,10 @@ type JSONConfiguration struct {
 }
 
 type Profile struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Jira Jira   `json:"jira,omitempty"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Jira   Jira   `json:"jira,omitempty"`
+	Github Github `json:"github,omitempty"`
 }
 
 type Jira struct {
@@ -21,4 +23,8 @@ type Jira struct {
 	AccountID string `json:"accountID"`
 	Email     string `json:"email"`
 	UserKey   string `json:"userKey"`
+}
+
+type Github struct {
+	User string `json:"user"`
 }

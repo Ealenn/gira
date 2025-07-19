@@ -1,58 +1,75 @@
 package service
 
 import (
-	"encoding/json"
-	"errors"
-	"net/http"
-	"time"
+	"context"
+	"os/exec"
+	"strings"
 
 	"github.com/Ealenn/gira/internal/log"
+	"github.com/google/go-github/v73/github"
 )
-
-var client = &http.Client{Timeout: 10 * time.Second}
 
 type GitHub struct {
 	logger *log.Logger
+	client *github.Client
 }
 
 func NewGitHub(logger *log.Logger) *GitHub {
+	client := github.NewClient(nil)
+
 	return &GitHub{
 		logger,
+		client,
 	}
 }
 
-func (github *GitHub) GetLatestRelease() (*GithubLatestReleaseResponse, error) {
-	githubReleaseResponse := &GithubLatestReleaseResponse{}
-	err := getJSON("https://api.github.com/repos/Ealenn/gira/releases/latest", githubReleaseResponse)
+func (github *GitHub) GetLatestRelease() (*github.RepositoryRelease, error) {
+	release, releaseResponse, err := github.client.Repositories.GetLatestRelease(context.Background(), "ealenn", "gira")
 
 	if err != nil {
+		github.logger.Debug("Unable to fetch Github release due to %s", releaseResponse.Status)
 		return nil, err
 	}
 
-	return githubReleaseResponse, nil
+	return release, nil
 }
 
-func getJSON(url string, target interface{}) error {
-	response, err := client.Get(url)
+func (github *GitHub) GetIssue(issueKeyID int) (*github.Issue, error) {
+	username, repository := github.getCurrentRepository()
+	issue, issueResponse, err := github.client.Issues.Get(context.Background(), username, repository, issueKeyID)
+
 	if err != nil {
-		return err
+		github.logger.Debug("Unable to fetch Github release due to %s", issueResponse.Status)
+		return nil, err
 	}
 
-	if response.StatusCode != http.StatusOK {
-		return errors.New(response.Status)
-	}
-
-	defer response.Body.Close()
-	return json.NewDecoder(response.Body).Decode(target)
+	return issue, nil
 }
 
-type GithubLatestReleaseResponse struct {
-	URL         string    `json:"url"`
-	TagName     string    `json:"tag_name"`
-	Name        string    `json:"name"`
-	Draft       bool      `json:"draft"`
-	Prerelease  bool      `json:"prerelease"`
-	CreatedAt   time.Time `json:"created_at"`
-	PublishedAt time.Time `json:"published_at"`
-	Body        string    `json:"body"`
+func (github *GitHub) getCurrentRepository() (string, string) {
+	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
+	output, err := cmd.Output()
+	if err != nil {
+		github.logger.Fatal("Error getting git remote URL")
+	}
+
+	repoURL := strings.TrimSpace(string(output))
+	github.logger.Debug("Git repository URL:", repoURL)
+
+	if !strings.HasPrefix(repoURL, "git@github.com:") || !strings.HasSuffix(repoURL, ".git") {
+		github.logger.Fatal("Invalid Git Remote Origin format")
+	}
+
+	trimmed := strings.TrimPrefix(repoURL, "git@github.com:")
+	trimmed = strings.TrimSuffix(trimmed, ".git")
+
+	parts := strings.Split(trimmed, "/")
+	if len(parts) != 2 {
+		github.logger.Fatal("Invalid Git Remote Origin URL")
+	}
+
+	username := parts[0]
+	repository := parts[1]
+
+	return username, repository
 }

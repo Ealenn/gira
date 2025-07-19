@@ -26,7 +26,7 @@ func CheckUpdate(logger *log.Logger, configuration *configuration.Configuration,
 		return
 	}
 
-	if version.GetCurrentVersion() != githubLastRelease.TagName {
+	if version.GetCurrentVersion() != githubLastRelease.GetTagName() {
 		logger.Info("⚠️  A new version of Gira is available! Check %s", "https://github.com/Ealenn/gira")
 	}
 

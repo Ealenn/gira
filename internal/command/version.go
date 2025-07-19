@@ -1,4 +1,4 @@
-package commands
+package command
 
 import (
 	"time"
@@ -37,9 +37,10 @@ func (command Version) Run() {
 		return
 	}
 
-	command.logger.Info("Latest version on GitHub: %s %s", githubLastRelease.TagName, log.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
+	latestTag := githubLastRelease.GetTagName()
+	command.logger.Info("Latest version on GitHub: %s %s", latestTag, log.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
 
-	if currentVersion == githubLastRelease.TagName {
+	if currentVersion == latestTag {
 		command.logger.Info("\n🚀 Gira is up to date.")
 	} else {
 		command.logger.Info("\n⚠️  A new version is available!\nCheck %s to update Gira", "https://github.com/Ealenn/gira")

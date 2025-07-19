@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Ealenn/gira/internal/commands"
+	"github.com/Ealenn/gira/internal/command"
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/ui"
@@ -17,11 +17,14 @@ var verbose bool
 var profile *configuration.Profile
 var currentProfileName string
 
-func preRun(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) {
+func preProfile(logger *log.Logger, configuration *configuration.Configuration) {
 	profile = configuration.GetProfile(currentProfileName)
 	logger.Debug("Current Profile Name : %s", currentProfileName)
 	logger.Debug("Profile exist : %s", strconv.FormatBool(profile != nil))
+}
 
+func preRun(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) {
+	preProfile(logger, configuration)
 	ui.CheckConfiguration(logger, configuration, currentProfileName, profile)
 	ui.CheckUpdate(logger, configuration, version)
 }
@@ -65,7 +68,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			preRun(logger, configuration, version)
-			commands.NewBranch(logger, configuration, profile).Run(args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
+			command.NewBranch(logger, configuration, profile).Run(args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
 		},
 	}
 	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assign", "a", false, "assign the issue to the currently logged-in user after creating the Git branch")
@@ -96,7 +99,7 @@ Useful for quickly reviewing the context of your work without leaving the termin
 			if len(args) > 0 {
 				issueID = &args[0]
 			}
-			commands.NewIssue(logger, configuration, profile).Run(issueID)
+			command.NewIssue(logger, configuration, profile).Run(issueID)
 		},
 	}
 	rootCmd.AddCommand(issueCommand)
@@ -118,7 +121,8 @@ This information is stored in your configuration file and enables Gira to commun
 		Aliases: []string{"configure"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
-			commands.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag)
+			preProfile(logger, configuration)
+			command.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag)
 		},
 	}
 	configCommand.Flags().BoolVarP(&configListFlag, "list", "l", false, "list all available profiles")
@@ -136,7 +140,8 @@ Displays the currently installed version of the Gira CLI.
 Also checks the GitHub repository to determine if a newer version is available for download, helping you stay up-to-date with the latest features and fixes.`,
 		Args: cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
-			commands.NewVersion(logger, configuration, profile).Run()
+			preProfile(logger, configuration)
+			command.NewVersion(logger, configuration, profile).Run()
 		},
 	}
 	rootCmd.AddCommand(versionCommand)
