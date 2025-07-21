@@ -1,14 +1,14 @@
 package branch
 
-type BranchType string
+type Type string
 
 const (
-	Bug     BranchType = "BUG"
-	Feature BranchType = "FEATURE"
+	Bug     Type = "BUG"
+	Feature Type = "FEATURE"
 )
 
 type Branch struct {
-	Type    BranchType
+	Type    Type
 	IssueID string
 	Title   string
 	Raw     string

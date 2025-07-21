@@ -19,7 +19,7 @@ import (
 var verbose bool
 var profile *configuration.Profile
 var gitManager *git.Git
-var branchManager *branch.BranchManager
+var branchManager *branch.Manager
 var tracker issue.Tracker
 var currentProfileName string
 

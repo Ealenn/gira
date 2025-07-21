@@ -13,10 +13,10 @@ type Issue struct {
 	logger  *log.Logger
 	tracker issue.Tracker
 	git     *git.Git
-	branch  *branch.BranchManager
+	branch  *branch.Manager
 }
 
-func NewIssue(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *branch.BranchManager) *Issue {
+func NewIssue(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *branch.Manager) *Issue {
 	return &Issue{
 		logger,
 		tracker,
