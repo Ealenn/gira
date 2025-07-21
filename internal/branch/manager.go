@@ -10,47 +10,47 @@ import (
 	"github.com/Ealenn/gira/internal/log"
 )
 
-type BranchManager struct {
+type Manager struct {
 	logger  *log.Logger
 	git     *git.Git
 	tracker issue.Tracker
 }
 
-func NewBranchManager(logger *log.Logger, git *git.Git, tracker issue.Tracker) *BranchManager {
-	return &BranchManager{
+func NewBranchManager(logger *log.Logger, git *git.Git, tracker issue.Tracker) *Manager {
+	return &Manager{
 		logger,
 		git,
 		tracker,
 	}
 }
 
-func (branch *BranchManager) GetCurrentBranch() *Branch {
-	currentBranch, currentBranchError := branch.git.CurrentBranch()
+func (manager *Manager) GetCurrentBranch() *Branch {
+	currentBranch, currentBranchError := manager.git.CurrentBranch()
 	if currentBranchError != nil {
-		branch.logger.Fatal("❌ Unable to check current branch")
+		manager.logger.Fatal("❌ Unable to check current branch")
 	}
 
-	branch.logger.Debug("🔎 Current branch %s", currentBranch)
+	manager.logger.Debug("🔎 Current branch %s", currentBranch)
 	branchNameParts := strings.Split(currentBranch, `/`)
 	if len(branchNameParts) < 2 {
-		branch.logger.Fatal("❌ Unable to find issue in branch name %s", currentBranch)
+		manager.logger.Fatal("❌ Unable to find issue in branch name %s", currentBranch)
 	}
 
 	return &Branch{
-		Type:    branch.getBranchType([]string{branchNameParts[0]}),
+		Type:    manager.getBranchType([]string{branchNameParts[0]}),
 		IssueID: branchNameParts[1],
 		Title:   branchNameParts[2],
 	}
 }
 
-func (branch *BranchManager) Generate(issue *issue.Issue) *Branch {
+func (manager *Manager) Generate(issue *issue.Issue) *Branch {
 	branchTitle := strings.ToLower(strings.TrimSpace(issue.Title))
 	branchTitle = regexp.MustCompile(`^\[[^\]]+\]\s*`).ReplaceAllString(branchTitle, "")
 	branchTitle = regexp.MustCompile(`[^\w\s-]`).ReplaceAllString(branchTitle, "")
 	branchTitle = strings.Join(strings.Fields(branchTitle), " ")
 	branchTitle = strings.ReplaceAll(branchTitle, " ", "-")
 
-	branchType := branch.getBranchType(issue.Types)
+	branchType := manager.getBranchType(issue.Types)
 
 	branchRaw := fmt.Sprintf("%s/%s/%s", branchType, issue.ID, branchTitle)
 
@@ -62,17 +62,17 @@ func (branch *BranchManager) Generate(issue *issue.Issue) *Branch {
 	}
 }
 
-func (branch *BranchManager) getBranchType(issueTypes []string) BranchType {
+func (manager *Manager) getBranchType(issueTypes []string) Type {
 	for _, issueType := range issueTypes {
 		switch strings.ToLower(issueType) {
 		case "bug":
-			return BranchType(Bug)
+			return Type(Bug)
 		case "tasks":
 		case "feature":
 		case "enhancement":
-			return BranchType(Feature)
+			return Type(Feature)
 		}
 	}
 
-	return BranchType(Feature)
+	return Type(Feature)
 }

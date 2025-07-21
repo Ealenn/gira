@@ -1,9 +1,6 @@
 package command
 
 import (
-	"bufio"
-	"os"
-
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
@@ -16,10 +13,10 @@ type Branch struct {
 	logger  *log.Logger
 	tracker issue.Tracker
 	git     *git.Git
-	branch  *branch.BranchManager
+	branch  *branch.Manager
 }
 
-func NewBranch(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *branch.BranchManager) *Branch {
+func NewBranch(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *branch.Manager) *Branch {
 	return &Branch{
 		logger,
 		tracker,
@@ -36,22 +33,31 @@ func (command Branch) Run(issueID string, assign bool, force bool) {
 		command.logger.Warn("⚠️ Branch named %s already exists", branch.Raw)
 
 		if !force {
-			command.logger.Info("Would you like to switch to this branch?\nPress %s to continue, %s to cancel", "ENTER", log.ErrorStyle.Render("CTRL+C"))
-			bufio.NewReader(os.Stdin).ReadLine()
+			switchBranchPrompt := promptui.Prompt{
+				Label:     "Would you like to switch to this branch?",
+				IsConfirm: true,
+				Default:   "y",
+			}
+			_, switchBranchPromptError := switchBranchPrompt.Run()
+
+			if switchBranchPromptError != nil {
+				command.logger.Fatal("The operation was %s", "canceled")
+			}
 		}
 
+		// TODO: Handle error
 		command.git.SwitchBranch(branch.Raw)
 		command.logger.Info("✅ %s has just been checkout", branch.Raw)
 	} else {
 		if !force {
 			command.logger.Info("🌳 Branch will be generated\nPress %s to continue, %s to cancel", "ENTER", log.ErrorStyle.Render("CTRL+C"))
-			prompt := promptui.Prompt{
+			branchNamePrompt := promptui.Prompt{
 				Label:     "Branch",
 				Default:   branch.Raw,
 				Pointer:   promptui.PipeCursor,
 				AllowEdit: true,
 			}
-			newBranchName, err := prompt.Run()
+			newBranchName, err := branchNamePrompt.Run()
 			if err != nil {
 				command.logger.Fatal("The operation was %s", "canceled")
 			}

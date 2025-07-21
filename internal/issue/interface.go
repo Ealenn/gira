@@ -1,10 +1,10 @@
 package issue
 
-type IssueType string
+type Type string
 
 const (
-	Bug     IssueType = "BUG"
-	Feature IssueType = "FEATURE"
+	Bug     Type = "BUG"
+	Feature Type = "FEATURE"
 )
 
 type Assignee struct {
