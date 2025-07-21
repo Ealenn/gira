@@ -30,14 +30,16 @@ func preProfile(logger *log.Logger, config *configuration.Configuration) {
 
 	gitManager = git.NewGit(logger)
 
-	switch profile.Type {
-	case configuration.ProfileTypeJira:
-		tracker = issue.NewJira(logger, profile, gitManager)
-	case configuration.ProfileTypeGithub:
-		tracker = issue.NewGitHub(logger, profile, gitManager)
-	}
+	if profile != nil {
+		switch profile.Type {
+		case configuration.ProfileTypeJira:
+			tracker = issue.NewJira(logger, profile, gitManager)
+		case configuration.ProfileTypeGithub:
+			tracker = issue.NewGitHub(logger, profile, gitManager)
+		}
 
-	branchManager = branch.NewBranchManager(logger, gitManager, tracker)
+		branchManager = branch.NewBranchManager(logger, gitManager, tracker)
+	}
 }
 
 func preRun(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) {
