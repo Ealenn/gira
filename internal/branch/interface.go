@@ -3,7 +3,7 @@ package branch
 type Type string
 
 const (
-	Bug     Type = "BUG"
+	Bug     Type = "BUGFIX"
 	Feature Type = "FEATURE"
 )
 

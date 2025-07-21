@@ -153,13 +153,20 @@ Example :
 
 ### ⚙️ `config`: Configure Gira profile with accounts and tokens
 
-The `gira config` command sets up the Gira CLI by allowing you to configure one or more accounts, each with its own credentials. You can create multiple profiles to connect to different sources, making it easy to switch between environments or accounts.
+The `gira config` command sets up the Gira CLI by allowing you to configure one or more accounts, each with its own credentials. 
 
-For each profile, you'll provide the Jira host URL and API token. This information is stored in your configuration file and enables Gira to communicate with the specified Jira instance when running commands like `branch` or `issue`.
+You can create multiple profiles to connect to different sources, such as `Jira` or `GitHub` issues, making it easy to switch between environments or accounts.
+
+For each profile, you'll specify the source type along with the necessary credentials:
+
+- For Jira: Provide the Jira host URL and API token.
+- For GitHub: Provide optional GitHub personal access token.
+
+This configuration is stored in your local Gira config file and enables the CLI to communicate with the appropriate service when running commands like `branch` or `issue`.
 
 #### Default Profile
 
-Running `gira config` with no additional arguments will set up or update your default profile:
+Running `gira config` with no additional arguments will set up or update your **default** profile:
 
 ```
 ❯ gira config
@@ -177,7 +184,7 @@ Enter the Jira Token : **********
 
 You can also configure custom profiles and use them in any Gira command by specifying the `--profile` option.
 
-This is useful if you need to work with multiple Jira instances or accounts.
+This is useful if you need to work with multiple instances or accounts.
 
 ```
 ❯ gira config --profile perso
@@ -190,6 +197,12 @@ Once configured, you can specify the profile in other commands:
 
 ```
 ❯ gira branch --profile perso
+```
+
+or 
+
+```
+❯ gira branch -p perso
 ```
 
 This flexibility allows you to easily manage and switch between multiple Jira or Github accounts or environments as needed.
