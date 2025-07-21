@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/Ealenn/gira/internal/service"
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/version"
@@ -19,8 +18,7 @@ func CheckUpdate(logger *log.Logger, configuration *configuration.Configuration,
 		return
 	}
 
-	githubService := service.NewGitHub(logger)
-	githubLastRelease, githubError := githubService.GetLatestRelease()
+	githubLastRelease, githubError := version.GetLatestRelease()
 	if githubError != nil {
 		logger.Debug("Unable to fetch latest version of Gira due to %v", githubError)
 		return

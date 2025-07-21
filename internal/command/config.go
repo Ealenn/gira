@@ -1,16 +1,14 @@
 package command
 
 import (
-	"bufio"
-	"os"
 	"regexp"
 	"strings"
 
 	"github.com/Ealenn/gira/internal/configuration"
+	"github.com/Ealenn/gira/internal/git"
+	"github.com/Ealenn/gira/internal/issue"
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/Ealenn/gira/internal/service"
 
-	"github.com/charmbracelet/x/term"
 	"github.com/manifoldco/promptui"
 )
 
@@ -59,8 +57,10 @@ func (command Config) Run(profileName string, list bool) {
 
 	if command.profile.Type == configuration.ProfileTypeJira {
 		command.createOrUpdateJiraProfile()
+		command.profile.Github = configuration.Github{}
 	} else {
 		command.createOrUpdateGithubProfile()
+		command.profile.Jira = configuration.Jira{}
 	}
 
 	err := command.configuration.AddProfile(*command.profile)
@@ -71,42 +71,22 @@ func (command Config) Run(profileName string, list bool) {
 }
 
 func (command Config) createOrUpdateJiraProfile() {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Jira Endpoint
 	command.logger.Info("Enter the Jira API URL (Example %s):", "https://jira.mycompagny.com")
-	if command.profile.Jira.Host != "" {
-		command.logger.Info("[%s]", command.profile.Jira.Host)
+	command.question("Endpoint", &command.profile.Jira.Host, false)
+	if !isValidURLRegex(command.profile.Jira.Host) {
+		command.logger.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", command.profile.Jira.Host)
 	}
-	inputJiraHost, _ := reader.ReadString('\n')
-	inputJiraHost = strings.TrimSpace(inputJiraHost)
-	if inputJiraHost == "" {
-		inputJiraHost = command.profile.Jira.Host
-	}
-	if !isValidURLRegex(inputJiraHost) {
-		command.logger.Fatal("%s '%s' is not a valid URL. Please make sure it's a full URL including the scheme (e.g. https://example.com)", "ERROR", inputJiraHost)
-	}
-	command.profile.Jira.Host = inputJiraHost
 
-	// Jira Token
-	command.logger.Info("Enter the Jira Token (See %s%s):", inputJiraHost, "/manage-profile/security/api-tokens")
-	if command.profile.Jira.Token != "" {
-		command.logger.Info("[Token already defined. Press %s to continue without making any changes.]", "ENTER")
-	}
-	inputJiraTokenBytes, _ := term.ReadPassword(os.Stdin.Fd())
-	inputJiraToken := strings.TrimSpace(string(inputJiraTokenBytes))
-	if inputJiraToken == "" {
-		inputJiraToken = command.profile.Jira.Token
-	}
-	command.profile.Jira.Token = inputJiraToken
+	command.logger.Info("Enter the Jira Token (See %s%s):", command.profile.Jira.Host, "/manage-profile/security/api-tokens")
+	command.question("Token", &command.profile.Jira.Token, true)
 
-	// Jira Profile
-	jiraService := service.NewJira(command.logger, command.profile)
+	// TODO: Refactoring
+	jiraService := issue.NewJira(command.logger, command.profile, git.NewGit(command.logger))
 	jiraUser, jiraUserError := jiraService.GetMyself()
 
 	if jiraUserError != nil {
 		command.logger.Debug("Unable to fetch user accound due to %v", jiraUserError)
-		command.logger.Fatal("❌ Unable to fetch Jira account in %s.", inputJiraHost)
+		command.logger.Fatal("❌ Unable to fetch Jira account in %s.", command.profile.Jira.Host)
 	}
 
 	command.profile.Jira.Email = jiraUser.EmailAddress
@@ -115,26 +95,41 @@ func (command Config) createOrUpdateJiraProfile() {
 }
 
 func (command Config) createOrUpdateGithubProfile() {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Github Username
 	command.logger.Info("Enter your Github %s (Example %s):", "Username", "ealenn")
-	if command.profile.Github.User != "" {
-		command.logger.Info("[%s]", command.profile.Github.User)
-	}
-	inputGithubUser, _ := reader.ReadString('\n')
-	inputGithubUser = strings.TrimSpace(inputGithubUser)
-	if inputGithubUser == "" {
-		inputGithubUser = command.profile.Github.User
-	}
+	command.question("User", &command.profile.Github.User, false)
 
-	command.profile.Github.User = inputGithubUser
+	command.logger.Info("Enter your Github %s (See %s):", "Token", "https://github.com/settings/tokens")
+	command.logger.Info("Leave %s to use only %s repositories", "blank", "public")
+	command.question("Token", &command.profile.Github.Token, true)
 }
 
-func (command Config) selectProfileType() string {
+func (command Config) question(label string, value *string, password bool) {
+	var mask rune
+	if password {
+		mask = '*'
+	}
+
+	prompt := promptui.Prompt{
+		Label:     label,
+		AllowEdit: true,
+		Default:   *value,
+		Mask:      mask,
+		Pointer:   promptui.PipeCursor,
+	}
+
+	result, err := prompt.Run()
+
+	if err != nil {
+		command.logger.Fatal("The operation was %s", "canceled")
+	}
+
+	*value = strings.TrimSpace(result)
+}
+
+func (command Config) selectProfileType() configuration.ProfileType {
 	prompt := promptui.Select{
 		Label: "Type",
-		Items: []string{configuration.ProfileTypeJira, configuration.ProfileTypeGithub},
+		Items: []configuration.ProfileType{configuration.ProfileTypeJira, configuration.ProfileTypeGithub},
 	}
 
 	_, result, err := prompt.Run()
@@ -143,7 +138,7 @@ func (command Config) selectProfileType() string {
 		command.logger.Fatal("The operation was %s", "canceled")
 	}
 
-	return result
+	return configuration.ProfileType(result)
 }
 
 func isValidURLRegex(url string) bool {

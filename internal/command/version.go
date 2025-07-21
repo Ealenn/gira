@@ -5,7 +5,6 @@ import (
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/Ealenn/gira/internal/service"
 	"github.com/Ealenn/gira/internal/version"
 )
 
@@ -13,16 +12,13 @@ type Version struct {
 	logger        *log.Logger
 	configuration *configuration.Configuration
 	version       *version.Version
-	profile       *configuration.Profile
-	githubService *service.GitHub
 }
 
-func NewVersion(logger *log.Logger, configuration *configuration.Configuration, profile *configuration.Profile) *Version {
+func NewVersion(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) *Version {
 	return &Version{
-		logger:        logger,
-		configuration: configuration,
-		profile:       profile,
-		githubService: service.NewGitHub(logger),
+		logger,
+		configuration,
+		version,
 	}
 }
 
@@ -30,7 +26,7 @@ func (command Version) Run() {
 	currentVersion := command.version.GetCurrentVersion()
 	command.logger.Info("Current version : %s", currentVersion)
 
-	githubLastRelease, githubError := command.githubService.GetLatestRelease()
+	githubLastRelease, githubError := command.version.GetLatestRelease()
 	if githubError != nil {
 		command.logger.Debug("Unable to fetch latest version of Gira due to %v", githubError)
 		command.logger.Fatal("❌ Failed to fetch latest release from GitHub, check %s", "https://github.com/Ealenn/gira")

@@ -4,8 +4,11 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/command"
 	"github.com/Ealenn/gira/internal/configuration"
+	"github.com/Ealenn/gira/internal/git"
+	"github.com/Ealenn/gira/internal/issue"
 	"github.com/Ealenn/gira/internal/log"
 	"github.com/Ealenn/gira/internal/ui"
 	"github.com/Ealenn/gira/internal/version"
@@ -15,12 +18,26 @@ import (
 
 var verbose bool
 var profile *configuration.Profile
+var gitManager *git.Git
+var branchManager *branch.BranchManager
+var tracker issue.Tracker
 var currentProfileName string
 
-func preProfile(logger *log.Logger, configuration *configuration.Configuration) {
-	profile = configuration.GetProfile(currentProfileName)
+func preProfile(logger *log.Logger, config *configuration.Configuration) {
+	profile = config.GetProfile(currentProfileName)
 	logger.Debug("Current Profile Name : %s", currentProfileName)
 	logger.Debug("Profile exist : %s", strconv.FormatBool(profile != nil))
+
+	gitManager = git.NewGit(logger)
+
+	switch profile.Type {
+	case configuration.ProfileTypeJira:
+		tracker = issue.NewJira(logger, profile, gitManager)
+	case configuration.ProfileTypeGithub:
+		tracker = issue.NewGitHub(logger, profile, gitManager)
+	}
+
+	branchManager = branch.NewBranchManager(logger, gitManager, tracker)
 }
 
 func preRun(logger *log.Logger, configuration *configuration.Configuration, version *version.Version) {
@@ -31,7 +48,7 @@ func preRun(logger *log.Logger, configuration *configuration.Configuration, vers
 
 func main() {
 	logger := log.New(&verbose)
-	version := version.New()
+	version := version.New(logger)
 	configuration := configuration.New(logger)
 
 	rootCmd := &cobra.Command{
@@ -48,7 +65,7 @@ Use Gira to accelerate your workflow and keep your projects organized more effic
 
 	// Global
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "Print detailed operation logs and debug information")
-	rootCmd.PersistentFlags().StringVarP(&currentProfileName, "profile", "", "default", "Configuration profile to use")
+	rootCmd.PersistentFlags().StringVarP(&currentProfileName, "profile", "p", "default", "Configuration profile to use")
 
 	/* ----------------------
 	 * Branch
@@ -68,7 +85,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			preRun(logger, configuration, version)
-			command.NewBranch(logger, configuration, profile).Run(args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
+			command.NewBranch(logger, tracker, gitManager, branchManager).Run(args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
 		},
 	}
 	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assign", "a", false, "assign the issue to the currently logged-in user after creating the Git branch")
@@ -99,7 +116,7 @@ Useful for quickly reviewing the context of your work without leaving the termin
 			if len(args) > 0 {
 				issueID = &args[0]
 			}
-			command.NewIssue(logger, configuration, profile).Run(issueID)
+			command.NewIssue(logger, tracker, gitManager, branchManager).Run(issueID)
 		},
 	}
 	rootCmd.AddCommand(issueCommand)
@@ -141,7 +158,7 @@ Also checks the GitHub repository to determine if a newer version is available f
 		Args: cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preProfile(logger, configuration)
-			command.NewVersion(logger, configuration, profile).Run()
+			command.NewVersion(logger, configuration, version).Run()
 		},
 	}
 	rootCmd.AddCommand(versionCommand)
