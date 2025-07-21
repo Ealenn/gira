@@ -45,14 +45,16 @@ func (manager *Manager) GetCurrentBranch() *Branch {
 
 func (manager *Manager) Generate(issue *issue.Issue) *Branch {
 	branchTitle := strings.ToLower(strings.TrimSpace(issue.Title))
+	branchTitle = strings.Join(strings.Fields(branchTitle), "-")
+	branchTitle = strings.ReplaceAll(branchTitle, " ", "-")
 	branchTitle = regexp.MustCompile(`^\[[^\]]+\]\s*`).ReplaceAllString(branchTitle, "")
 	branchTitle = regexp.MustCompile(`[^\w\s-]`).ReplaceAllString(branchTitle, "")
-	branchTitle = strings.Join(strings.Fields(branchTitle), " ")
-	branchTitle = strings.ReplaceAll(branchTitle, " ", "-")
+	branchTitle = regexp.MustCompile(`-+`).ReplaceAllString(branchTitle, "-")
+	branchTitle = strings.Trim(branchTitle, "-")
 
 	branchType := manager.getBranchType(issue.Types)
 
-	branchRaw := fmt.Sprintf("%s/%s/%s", branchType, issue.ID, branchTitle)
+	branchRaw := fmt.Sprintf("%s/%s/%s", strings.ToLower(string(branchType)), strings.ToUpper(issue.ID), strings.ToLower(branchTitle))
 
 	return &Branch{
 		Type:    branchType,
