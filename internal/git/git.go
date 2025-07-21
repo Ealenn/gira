@@ -1,4 +1,4 @@
-package service
+package git
 
 import (
 	"os/exec"
@@ -26,6 +26,18 @@ func (git *Git) CreateBranch(name string) []byte {
 	}
 
 	return output
+}
+
+func (git *Git) CurrentOrigin() string {
+	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
+	output, err := cmd.Output()
+	if err != nil {
+		git.logger.Fatal("Unable to get Git Origin URL from current folder")
+	}
+
+	origin := strings.TrimSpace(string(output))
+	git.logger.Debug("Git repository URL: %s", origin)
+	return origin
 }
 
 func (git *Git) CurrentBranch() (string, error) {
