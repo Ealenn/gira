@@ -3,8 +3,8 @@ package issue
 type Type string
 
 const (
-	Bug     Type = "BUG"
-	Feature Type = "FEATURE"
+	TypeBug     Type = "BUG"
+	TypeFeature Type = "FEATURE"
 )
 
 type Assignee struct {
@@ -23,7 +23,15 @@ type Issue struct {
 	URL         string
 }
 
+type CreateIssueOptions struct {
+	Title       string
+	Description string
+	Type        Type
+	Project     string
+}
+
 type Tracker interface {
 	GetIssue(issueKeyID string) *Issue
+	CreateIssue(options CreateIssueOptions) *Issue
 	SelfAssignIssue(issueKeyID string) error
 }

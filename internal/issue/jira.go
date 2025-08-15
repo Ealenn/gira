@@ -55,24 +55,31 @@ func (tracker *JiraTracker) GetIssue(issueKeyID string) *Issue {
 		tracker.logger.Fatal("❌ Unable to find issue %s", issueKeyID)
 	}
 
-	var assignees []Assignee
-	if issue.Fields.Assignee != nil {
-		assignees = append(assignees, Assignee{
-			ID:    issue.Fields.Assignee.AccountID,
-			Name:  issue.Fields.Assignee.DisplayName,
-			Email: issue.Fields.Assignee.EmailAddress,
-		})
+	return tracker.formatIssue(issue)
+}
+
+func (tracker *JiraTracker) CreateIssue(options CreateIssueOptions) *Issue {
+	issueTypeName := "Task"
+	if options.Type == TypeBug {
+		issueTypeName = "Bug"
 	}
 
-	return &Issue{
-		ID:          issueKeyID,
-		Title:       issue.Fields.Summary,
-		Description: issue.Fields.Description,
-		Status:      issue.Fields.Status.Name,
-		Types:       []string{issue.Fields.IssueType.Name},
-		URL:         fmt.Sprintf("%s%s%s", tracker.profile.Jira.Host, "/browse/", issue.Key),
-		Assignees:   assignees,
+	issue, issueResponse, err := tracker.jiraClient.Issue.Create(context.Background(), &models.IssueSchemeV2{
+		Fields: &models.IssueFieldsSchemeV2{
+			IssueType:   &models.IssueTypeScheme{Name: issueTypeName},
+			Summary:     options.Title,
+			Description: options.Description,
+			Project:     &models.ProjectScheme{Key: options.Project},
+		},
+	}, &models.CustomFields{})
+
+	if err != nil {
+		tracker.logger.Debug("Create issue response status %s with error %v", issueResponse.StatusCode, err)
+		tracker.logger.Fatal("❌ Unable to create issue due to %s", issueResponse.Status)
 	}
+
+	tracker.logger.Debug("Issue ID %s and Key %s created", issue.ID, issue.Key)
+	return tracker.GetIssue(issue.Key)
 }
 
 func (tracker *JiraTracker) GetMyself() (*models.UserScheme, error) {
@@ -103,4 +110,25 @@ func (tracker *JiraTracker) SelfAssignIssue(issueKeyID string) error {
 	}, nil, nil)
 
 	return err
+}
+
+func (tracker *JiraTracker) formatIssue(issue *models.IssueSchemeV2) *Issue {
+	var assignees []Assignee
+	if issue.Fields.Assignee != nil {
+		assignees = append(assignees, Assignee{
+			ID:    issue.Fields.Assignee.AccountID,
+			Name:  issue.Fields.Assignee.DisplayName,
+			Email: issue.Fields.Assignee.EmailAddress,
+		})
+	}
+
+	return &Issue{
+		ID:          issue.Key,
+		Title:       issue.Fields.Summary,
+		Description: issue.Fields.Description,
+		Status:      issue.Fields.Status.Name,
+		Types:       []string{issue.Fields.IssueType.Name},
+		URL:         fmt.Sprintf("%s%s%s", tracker.profile.Jira.Host, "/browse/", issue.Key),
+		Assignees:   assignees,
+	}
 }
