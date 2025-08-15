@@ -40,39 +40,27 @@ func (tracker *GitHubTracker) GetIssue(issueKeyID string) *Issue {
 	issue, issueResponse, err := tracker.githubClient.Issues.Get(context.Background(), username, repository, issueNumber)
 
 	if err != nil {
-		tracker.logger.Debug("Issue %s response status %s", issueKeyID, issueResponse.Status)
+		tracker.logger.Debug("Issue %s response status %s with error %v", issueKeyID, issueResponse.Status, err)
 		tracker.logger.Fatal("❌ Unable to find issue %s", issueKeyID)
 	}
 
-	var assignees []Assignee
-	if issue.Assignees != nil {
-		for _, assignee := range issue.Assignees {
-			email := assignee.GetEmail()
-			if email == "" {
-				email = assignee.GetHTMLURL()
-			}
-			assignees = append(assignees, Assignee{
-				ID:    assignee.GetLogin(),
-				Name:  assignee.GetLogin(),
-				Email: email,
-			})
-		}
+	return tracker.formatIssue(issue)
+}
+
+func (tracker *GitHubTracker) CreateIssue(options CreateIssueOptions) *Issue {
+	username, repository := tracker.getCurrentRepository()
+
+	issue, response, err := tracker.githubClient.Issues.Create(context.Background(), username, repository, &github.IssueRequest{
+		Title: &options.Title,
+		Body:  &options.Description,
+	})
+
+	if err != nil {
+		tracker.logger.Fatal("Unable to create Github issue due to %s", response.Status)
 	}
 
-	labels := []string{}
-	for _, element := range issue.Labels {
-		labels = append(labels, *element.Name)
-	}
-
-	return &Issue{
-		ID:          issueKeyID,
-		Title:       issue.GetTitle(),
-		Description: issue.GetBody(),
-		Status:      issue.GetState(),
-		Types:       labels,
-		Assignees:   assignees,
-		URL:         issue.GetHTMLURL(),
-	}
+	tracker.logger.Debug("Issue %v created", issue.GetNumber())
+	return tracker.formatIssue(issue)
 }
 
 func (tracker *GitHubTracker) SelfAssignIssue(issueKeyID string) error {
@@ -115,4 +103,40 @@ func (tracker *GitHubTracker) getIssueNumber(issueKeyID string) int {
 		tracker.logger.Fatal("Github issue ID %s invalid !", issueKeyID)
 	}
 	return issueNumber
+}
+
+func (tracker *GitHubTracker) getIssueString(issueKeyID int) string {
+	return strconv.Itoa(issueKeyID)
+}
+
+func (tracker *GitHubTracker) formatIssue(issue *github.Issue) *Issue {
+	var assignees []Assignee
+	if issue.Assignees != nil {
+		for _, assignee := range issue.Assignees {
+			email := assignee.GetEmail()
+			if email == "" {
+				email = assignee.GetHTMLURL()
+			}
+			assignees = append(assignees, Assignee{
+				ID:    assignee.GetLogin(),
+				Name:  assignee.GetLogin(),
+				Email: email,
+			})
+		}
+	}
+
+	labels := []string{}
+	for _, element := range issue.Labels {
+		labels = append(labels, *element.Name)
+	}
+
+	return &Issue{
+		ID:          tracker.getIssueString(issue.GetNumber()),
+		Title:       issue.GetTitle(),
+		Description: issue.GetBody(),
+		Status:      issue.GetState(),
+		Types:       labels,
+		Assignees:   assignees,
+		URL:         issue.GetHTMLURL(),
+	}
 }
