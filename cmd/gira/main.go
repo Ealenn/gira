@@ -56,11 +56,11 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:     "gira",
 		Version: version.GetCurrentVersion(),
-		Short:   "Gira is a CLI tool that connects your Git workflow with Jira, letting you automate tasks like branch creation and issue updates directly from your terminal.",
+		Short:   "Gira is a CLI tool that connects your Git workflow with Jira & Github, letting you automate tasks like branch creation and issue updates directly from your terminal.",
 		Long: `
-Gira is a simple and powerful command-line tool that bridges your Git workflow with Jira.
-It helps you automate common development tasks such as creating Git branches from Jira issues, updating issue statuses, or closing issues — all without leaving your terminal.
-With Gira, you can streamline your development processes, eliminate repetitive copy-pasting between Jira and Git, and ensure your issue tracking stays in sync with your commits.
+Gira is a simple and powerful command-line tool that bridges your Git workflow with Jira & Github.
+It helps you automate common development tasks such as creating Git branches from issues, updating issue statuses, or closing issues — all without leaving your terminal.
+With Gira, you can streamline your development processes, eliminate repetitive copy-pasting between Issues and Git, and ensure your issue tracking stays in sync with your commits.
 Use Gira to accelerate your workflow and keep your projects organized more efficiently.
 		`,
 	}
@@ -95,6 +95,25 @@ This helps enforce consistent naming conventions and improve traceability betwee
 	rootCmd.AddCommand(branchCommand)
 
 	/* ----------------------
+	 * Ninja
+	 * ----------------------
+	 */
+	var ninjaCommandForceFlag bool
+	var ninjaCommand = &cobra.Command{
+		Use:     "ninja",
+		Short:   "Create a new issue and associated branch in one command",
+		Long:    ``,
+		Aliases: []string{"doh", "oops"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(_ *cobra.Command, args []string) {
+			preRun(logger, configuration, version)
+			command.NewNinja(logger, tracker, gitManager, branchManager).Run(ninjaCommandForceFlag)
+		},
+	}
+	ninjaCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")
+	rootCmd.AddCommand(ninjaCommand)
+
+	/* ----------------------
 	 * Issue
 	 * ----------------------
 	 */
@@ -122,6 +141,33 @@ Useful for quickly reviewing the context of your work without leaving the termin
 		},
 	}
 	rootCmd.AddCommand(issueCommand)
+
+	/* ----------------------
+	 * Open
+	 * ----------------------
+	 */
+	var openCommand = &cobra.Command{
+		Use:   "open  [ID]",
+		Short: "Open issue in web browser (from current branch or specified issue ID)",
+		Long: `
+Open issue in web browser.
+
+If no issue ID is provided, the issue associated with the current Git branch is used.
+If an issue ID is specified, the command will display information for that issue.
+		`,
+		Aliases: []string{"web"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(_ *cobra.Command, args []string) {
+			preRun(logger, configuration, version)
+
+			var issueID *string
+			if len(args) > 0 {
+				issueID = &args[0]
+			}
+			command.NewOpen(logger, branchManager, tracker).Run(issueID)
+		},
+	}
+	rootCmd.AddCommand(openCommand)
 
 	/* ----------------------
 	 * Config

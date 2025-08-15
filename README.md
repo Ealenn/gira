@@ -1,4 +1,4 @@
-# 🦒 Gira — Git, Jira & GitHub Issues CLI Tool
+# 🦒 Gira — Git, Jira & GitHub Issues CLI Tool  <!-- omit in toc -->
 
 [![GitHub stars](https://img.shields.io/github/stars/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/stargazers) 
 [![GitHub issues](https://img.shields.io/github/issues/Ealenn/gira?style=for-the-badge&logo=github)](https://github.com/Ealenn/gira/issues) 
@@ -6,28 +6,24 @@
 [![DockerHub](https://img.shields.io/docker/pulls/ealen/gira.svg?style=for-the-badge&logo=docker)](https://hub.docker.com/repository/docker/ealen/gira) 
 [![License](https://img.shields.io/github/license/ealenn/gira?style=for-the-badge&logo=opensourceinitiative)](https://github.com/Ealenn/gira?tab=GPL-3.0-1-ov-file)
 
-Gira is a powerful command-line tool that bridges your Git workflow with both **Jira** and **GitHub Issues**. It helps you automate tasks like creating branches from issues, viewing issue details, and keeping issue tracking in sync with Git — all from your terminal.
+Gira is a powerful command-line tool that bridges your Git workflow with both **Jira** and **GitHub** issues. 
+It helps you automate tasks like creating branches from issue, viewing issue details, and keeping issue tracking in sync with Git — all from your terminal.
 
-Use Gira to speed up development workflows, reduce context switching, and streamline project tracking — whether you're using Jira, GitHub Issues, or both.
+Use Gira to speed up development workflows, reduce context switching, and streamline project tracking whether you're using Jira, GitHub, or both.
 
-- [🦒 Gira — Git, Jira \& GitHub Issues CLI Tool](#-gira--git-jira--github-issues-cli-tool)
-  - [📦 Installation](#-installation)
-    - [🔧 Automatic](#-automatic)
-      - [🐧 Unix (Linux / MacOS)](#-unix-linux--macos)
-      - [🪟 Windows](#-windows)
-    - [👉 Manual (Download the Binary)](#-manual-download-the-binary)
-    - [🐳 From Docker (No Install Required)](#-from-docker-no-install-required)
-  - [✨ Shell Autocompletion](#-shell-autocompletion)
-  - [🚀 Usage](#-usage)
-    - [⚙️ `config`: Configure Gira profile with accounts and tokens](#️-config-configure-gira-profile-with-accounts-and-tokens)
-      - [Default Profile](#default-profile)
-      - [Custom Profiles](#custom-profiles)
-    - [🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)](#-branch-create-a-new-git-branch-using-issue-id-jira-or-github)
-      - [Usage](#usage)
-      - [Example](#example)
-    - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
-      - [Usage](#usage-1)
-      - [Example](#example-1)
+- [📦 Installation](#-installation)
+  - [🔧 Automatic](#-automatic)
+  - [👉 Manual](#-manual)
+  - [🐳 Docker](#-docker)
+- [✨ Shell Autocompletion](#-shell-autocompletion)
+- [🚀 Usage](#-usage)
+  - [⚙️ `config`: Configure Gira profile with accounts and tokens](#️-config-configure-gira-profile-with-accounts-and-tokens)
+    - [Default Profile](#default-profile)
+    - [Custom Profiles](#custom-profiles)
+  - [🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)](#-branch-create-a-new-git-branch-using-issue-id-jira-or-github)
+  - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
+  - [🌐 `open`: Open the issue in your browser](#-open-open-the-issue-in-your-browser)
+  - [🥷 `ninja`: Create a new issue and branch in one go](#-ninja-create-a-new-issue-and-branch-in-one-go)
 
 ## 📦 Installation
 
@@ -39,19 +35,19 @@ Automated install/update, don't forget to always verify what you're piping into 
 
 The script installs downloaded binary to HOME directory by default, but it can be changed by setting DIR environment variable.
 
-#### 🐧 Unix (Linux / MacOS)
+#### 🐧 Unix (Linux / MacOS) <!-- omit in toc -->
 
 ```sh
 curl https://raw.githubusercontent.com/Ealenn/gira/master/install_unix.sh | bash
 ```
 
-#### 🪟 Windows
+#### 🪟 Windows <!-- omit in toc -->
 
 ```sh
 Invoke-RestMethod https://raw.githubusercontent.com/Ealenn/gira/master/install_windows.ps1 | Invoke-Expression
 ```
 
-### 👉 Manual (Download the Binary)
+### 👉 Manual
 
 |Platform|Download Link|Hash|
 |--------|-------------|----|
@@ -72,7 +68,7 @@ chmod +x /usr/local/bin/gira
 
 > This will place the gira binary in your system path for global use.
 
-### 🐳 From Docker (No Install Required) 
+### 🐳 Docker
 
 If you prefer using Docker, you can run Gira directly without installing it:
 
@@ -129,11 +125,13 @@ Available Commands:
   config      Configure Gira with accounts and tokens
   help        Help about any command
   issue       Show details of an issue (from current branch or specified issue ID)
+  ninja       Create a new issue and associated branch in one command
+  open        Open issue in web browser (from current branch or specified issue ID)
   version     Display the current Gira version and check for available updates
 
 Flags:
   -h, --help             help for gira
-      --profile string   Configuration profile to use (default "default")
+  -p  --profile string   Configuration profile to use (default "default")
       --verbose          Print detailed operation logs and debug information
   -v, --version          version for gira
 
@@ -215,7 +213,7 @@ The branch name is generated by combining the issue ID with a slugified version 
 
 This helps enforce consistent naming conventions and improve traceability between code and issues.
 
-#### Usage 
+#### Usage <!-- omit in toc -->
 ```
 Usage:
   gira branch [issue] [flags]
@@ -233,7 +231,7 @@ Flags:
   -h, --help     help for branch
 ```
 
-#### Example
+#### Example <!-- omit in toc -->
 ```
 ❯ gira branch ISSUE-123
 Branch feature/ISSUE-123/update-app-dependencies-to-the-latest-version will be generated
@@ -251,7 +249,7 @@ This includes the issue key, summary, description, status, priority, assignee, a
 
 Useful for quickly reviewing the context of your work without leaving the terminal.
 
-#### Usage
+#### Usage <!-- omit in toc -->
 ```
 Usage:
   gira issue [issueId] [flags]
@@ -264,7 +262,7 @@ Flags:
   -h, --help   help for issue
 ```
 
-#### Example
+#### Example <!-- omit in toc -->
 ```
 ❯ gira issue
 
@@ -288,4 +286,57 @@ Actual: 500 error
 Refer to the backend error logs and the related ticket: DEVOPS-123.
 
 🔗 More: https://jira.company.com/browse/PROJ-457
+```
+
+### 🌐 `open`: Open the issue in your browser
+
+The `gira open` command quickly opens the web page for the current issue (or a specified one) in your default browser.
+
+It works with both Jira and GitHub Issues, making it easy to jump from the terminal directly to the issue tracker for viewing, editing, or commenting.
+
+- If no issue ID is provided, open uses the issue associated with the current Git branch.
+- If an issue ID is specified, it will open that issue directly.
+
+#### Usage <!-- omit in toc -->
+```
+Usage:
+  gira gira open [issueId] [flags]
+
+Examples:
+  gira open
+  gira open ABC-123
+
+Flags:
+  -h, --help   help for issue
+```
+
+#### Example <!-- omit in toc -->
+```
+❯ gira open
+🔗 Opening https://jira.company.com/browse/PROJ-457
+```
+
+### 🥷 `ninja`: Create a new issue and branch in one go
+
+The `gira ninja` command speeds up your workflow by creating a new issue (in Jira or GitHub) and immediately generating a Git branch for it, all in a single step.
+
+This is especially useful when starting work on a brand-new task and wanting to dive straight into coding.
+
+#### Usage <!-- omit in toc -->
+```
+Usage:
+  gira ninja [flags]
+
+Flags:
+  -h, --help   help for issue
+```
+
+#### Example <!-- omit in toc -->
+```
+❯ gira ninja
+
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? Type: 
+  ▸ FEATURE
+    BUG
 ```
