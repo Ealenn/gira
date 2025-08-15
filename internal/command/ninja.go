@@ -30,7 +30,7 @@ func (command Ninja) Run(force bool) {
 	issue := command.tracker.CreateIssue(issueOptions)
 	command.logger.Info("Issue %s created, see %s", issue.ID, issue.URL)
 
-	NewBranch(command.logger, command.tracker, command.git, command.branch).Run(issue.ID, true, force)
+	NewBranch(command.logger, command.tracker, command.git, command.branch).RunWithIssue(issue, true, force)
 }
 
 func (command Ninja) createIssueOptions() issue.CreateIssueOptions {
