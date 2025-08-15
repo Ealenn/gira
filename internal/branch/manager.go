@@ -32,7 +32,7 @@ func (manager *Manager) GetCurrentBranch() *Branch {
 
 	manager.logger.Debug("🔎 Current branch %s", currentBranch)
 	branchNameParts := strings.Split(currentBranch, `/`)
-	if len(branchNameParts) < 2 {
+	if len(branchNameParts) < 3 {
 		manager.logger.Fatal("❌ Unable to find issue in branch name %s", currentBranch)
 	}
 
