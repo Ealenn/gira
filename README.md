@@ -328,7 +328,8 @@ Usage:
   gira ninja [flags]
 
 Flags:
-  -h, --help   help for issue
+  -f, --force   disable interactive prompts and force branch creation even if checks would normally prevent it
+  -h, --help    help for issue
 ```
 
 #### Example <!-- omit in toc -->

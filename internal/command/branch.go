@@ -27,6 +27,10 @@ func NewBranch(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *
 
 func (command Branch) Run(issueID string, assign bool, force bool) {
 	issue := command.tracker.GetIssue(issueID)
+	command.RunWithIssue(issue, assign, force)
+}
+
+func (command Branch) RunWithIssue(issue *issue.Issue, assign bool, force bool) {
 	branch := command.branch.Generate(issue)
 
 	if command.git.IsBranchExist(branch.Raw) {
@@ -71,9 +75,9 @@ func (command Branch) Run(issueID string, assign bool, force bool) {
 	if assign {
 		if assignError := command.tracker.SelfAssignIssue(branch.IssueID); assignError != nil {
 			command.logger.Debug("%v", assignError)
-			command.logger.Info("❌ %s Unable to assign issue %s...", log.ErrorStyle.Render("Oups..."), issueID)
+			command.logger.Info("❌ %s Unable to assign issue %s...", log.ErrorStyle.Render("Oups..."), issue.ID)
 		} else {
-			command.logger.Info("✅ Jira %s has been assigned to %s", issueID)
+			command.logger.Info("✅ Jira %s has been assigned to %s", issue.ID)
 		}
 	}
 }
