@@ -43,8 +43,18 @@ func (manager *Manager) GetCurrentBranch() *Branch {
 	}
 }
 
-func (manager *Manager) Generate(issue *issue.Issue) *Branch {
+type FromIssueOptions struct {
+	TitleOverride string
+}
+
+func (manager *Manager) FromIssue(issue *issue.Issue, opts *FromIssueOptions) *Branch {
 	branchTitle := strings.ToLower(strings.TrimSpace(issue.Title))
+
+	// Override title if provided
+	if opts != nil && opts.TitleOverride != "" {
+		branchTitle = strings.ToLower(strings.TrimSpace(opts.TitleOverride))
+	}
+
 	branchTitle = strings.Join(strings.Fields(branchTitle), "-")
 	branchTitle = strings.ReplaceAll(branchTitle, " ", "-")
 	branchTitle = regexp.MustCompile(`^\[[^\]]+\]\s*`).ReplaceAllString(branchTitle, "")

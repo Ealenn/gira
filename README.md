@@ -20,6 +20,7 @@ Use Gira to speed up development workflows, reduce context switching, and stream
   - [⚙️ `config`: Configure Gira profile with accounts and tokens](#️-config-configure-gira-profile-with-accounts-and-tokens)
     - [Default Profile](#default-profile)
     - [Custom Profiles](#custom-profiles)
+    - [AI-powered features](#ai-powered-features)
   - [🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)](#-branch-create-a-new-git-branch-using-issue-id-jira-or-github)
   - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
   - [🌐 `open`: Open the issue in your browser](#-open-open-the-issue-in-your-browser)
@@ -130,9 +131,10 @@ Available Commands:
   version     Display the current Gira version and check for available updates
 
 Flags:
+      --ai               enable AI-powered features, such as branch name suggestions and other smart assistance
   -h, --help             help for gira
-  -p  --profile string   Configuration profile to use (default "default")
-      --verbose          Print detailed operation logs and debug information
+  -p  --profile string   configuration profile to use (default "default")
+      --verbose          print detailed operation logs and debug information
   -v, --version          version for gira
 
 Use "gira [command] --help" for more information about a command.
@@ -204,6 +206,39 @@ or
 ```
 
 This flexibility allows you to easily manage and switch between multiple Jira or Github accounts or environments as needed.
+
+#### AI-powered features
+
+Gira can leverage AI to make your workflow smarter.
+
+With the `--ai` flag enabled, you can get features like:
+
+- Branch name suggestions based on issue titles and descriptions
+- Smart summaries and commit message drafts
+- Other context-aware assistance directly in your terminal
+
+Gira supports both self-hosted AI backends (e.g., [LocalAI](https://localai.io)) and cloud providers like OpenAI or Mistral.
+
+Configuration is done via environment variables:
+
+| Environment Variable | Comment | LocalAI.io | ChatGPT | Mistral |
+|----------------------|---------|------------|---------|---------|
+| `GIRA_AI_ENDPOINT`   | The base URL of the AI endpoint. **(Required)** | `http://127.0.0.1:8080` <br/> see [localai.io](https://localai.io) | `https://api.openai.com` | `https://api.mistral.ai/v1` |
+| `GIRA_AI_MODEL`      | The model to use for generating responses. **(Required)** | `gemma-3-4b-it` | `o4-mini` <br/> see [model list](https://platform.openai.com/docs/models) | `mistral-small-latest` <br/> see [model list](https://docs.mistral.ai/getting-started/models/models_overview/) |
+| `GIRA_AI_APIKEY`     | API key used for authentication. | `123456789` | `123456789` <br/> see [API keys](https://platform.openai.com/api-keys) | `132456789` <br/> see [API Keys](https://console.mistral.ai/api-keys)
+
+Add the environment variables to your shell config (`~/.zshrc`, `~/.bashrc`, etc.):
+
+```sh
+export GIRA_AI_ENDPOINT=https://api.openai.com
+export GIRA_AI_MODEL=o4-mini
+export GIRA_AI_APIKEY=sk-xxxxxxxx
+```
+
+Then reload your shell and use `Gira` with the `--ai` flag !
+
+> 💡 Tip: For maximum privacy, lower latency, and zero API costs, try [LocalAI](https://localai.io) or [Ollama](https://github.com/ollama/ollama).
+> You can run models entirely on your machine, making Gira’s AI features work offline and securely.
 
 ### 🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)
 

@@ -3,6 +3,7 @@ package command
 import (
 	"regexp"
 
+	"github.com/Ealenn/gira/internal/ai"
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
@@ -25,7 +26,7 @@ func NewIssue(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *b
 	}
 }
 
-func (command Issue) Run(optionalIssueID *string) {
+func (command Issue) Run(optionalIssueID *string, enableAI bool) {
 	var issueID string
 
 	if optionalIssueID != nil {
@@ -45,6 +46,20 @@ func (command Issue) Run(optionalIssueID *string) {
 	description := regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(issue.Description, "$1 $2")
 	description = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(description, "$1")
 	command.logger.Log("%s: \n%s", log.InfoStyle.Render("Description"), description)
+
+	if enableAI {
+		agent := ai.NewOpenAI(command.logger)
+		response, err := agent.IssueSummary(issue)
+
+		if err == nil {
+			command.logger.Log("--------------------------------------------------------------")
+			command.logger.Info("%s", "AI Quick summary:")
+			command.logger.Log("%s", response)
+			command.logger.Log("--------------------------------------------------------------")
+		} else {
+			command.logger.Debug("Unable to generate summary due to %v", err)
+		}
+	}
 
 	command.logger.Info("\n🔗 More %s", issue.URL)
 }

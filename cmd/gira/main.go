@@ -22,6 +22,7 @@ var gitManager *git.Git
 var branchManager *branch.Manager
 var tracker issue.Tracker
 var currentProfileName string
+var enableAI bool
 
 func preProfile(logger *log.Logger, config *configuration.Configuration) {
 	profile = config.GetProfile(currentProfileName)
@@ -66,8 +67,9 @@ Use Gira to accelerate your workflow and keep your projects organized more effic
 	}
 
 	// Global
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "Print detailed operation logs and debug information")
-	rootCmd.PersistentFlags().StringVarP(&currentProfileName, "profile", "p", "default", "Configuration profile to use")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "print detailed operation logs and debug information")
+	rootCmd.PersistentFlags().StringVarP(&currentProfileName, "profile", "p", "default", "configuration profile to use")
+	rootCmd.PersistentFlags().BoolVarP(&enableAI, "ai", "", false, "enable AI-powered features, such as branch name suggestions and other smart assistance")
 
 	/* ----------------------
 	 * Branch
@@ -87,7 +89,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			preRun(logger, configuration, version)
-			command.NewBranch(logger, tracker, gitManager, branchManager).Run(args[0], branchCommandAssignIssueFlag, branchCommandForceFlag)
+			command.NewBranch(logger, tracker, gitManager, branchManager).Run(args[0], branchCommandAssignIssueFlag, enableAI, branchCommandForceFlag)
 		},
 	}
 	branchCommand.Flags().BoolVarP(&branchCommandAssignIssueFlag, "assign", "a", false, "assign the issue to the currently logged-in user after creating the Git branch")
@@ -107,7 +109,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preRun(logger, configuration, version)
-			command.NewNinja(logger, tracker, gitManager, branchManager).Run(ninjaCommandForceFlag)
+			command.NewNinja(logger, tracker, gitManager, branchManager).Run(enableAI, ninjaCommandForceFlag)
 		},
 	}
 	ninjaCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")
@@ -137,7 +139,7 @@ Useful for quickly reviewing the context of your work without leaving the termin
 			if len(args) > 0 {
 				issueID = &args[0]
 			}
-			command.NewIssue(logger, tracker, gitManager, branchManager).Run(issueID)
+			command.NewIssue(logger, tracker, gitManager, branchManager).Run(issueID, enableAI)
 		},
 	}
 	rootCmd.AddCommand(issueCommand)
