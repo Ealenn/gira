@@ -105,7 +105,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Long:    ``,
 		Aliases: []string{"doh", "oops"},
 		Args:    cobra.MinimumNArgs(0),
-		Run: func(_ *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			preRun(logger, configuration, version)
 			command.NewNinja(logger, tracker, gitManager, branchManager).Run(ninjaCommandForceFlag)
 		},

@@ -1,11 +1,12 @@
 package command
 
 import (
+	"github.com/manifoldco/promptui"
+
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/manifoldco/promptui"
 )
 
 type Ninja struct {
