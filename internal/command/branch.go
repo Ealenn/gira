@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/Ealenn/gira/internal/ai"
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
@@ -25,16 +26,34 @@ func NewBranch(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *
 	}
 }
 
-func (command Branch) Run(issueID string, assign bool, force bool) {
+func (command Branch) Run(issueID string, assign bool, enableAI bool, force bool) {
 	issue := command.tracker.GetIssue(issueID)
-	command.RunWithIssue(issue, assign, force)
+	command.RunWithIssue(issue, assign, enableAI, force)
 }
 
-func (command Branch) RunWithIssue(issue *issue.Issue, assign bool, force bool) {
-	branch := command.branch.Generate(issue)
+func (command Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force bool) {
+	generatedBranch := command.branch.FromIssue(issue, &branch.FromIssueOptions{})
 
-	if command.git.IsBranchExist(branch.Raw) {
-		command.logger.Warn("⚠️ Branch named %s already exists", branch.Raw)
+	if enableAI {
+		agent := ai.NewOpenAI(command.logger)
+		response, err := agent.BranchNames(issue)
+
+		if err == nil && len(response) > 0 {
+			var branches []*branch.Branch
+			branches = append(branches, generatedBranch)
+
+			for _, iaGeneratedBranchName := range response {
+				branches = append(branches, command.branch.FromIssue(issue, &branch.FromIssueOptions{
+					TitleOverride: iaGeneratedBranchName,
+				}))
+			}
+
+			generatedBranch = command.selectBranchName(branches)
+		}
+	}
+
+	if command.git.IsBranchExist(generatedBranch.Raw) {
+		command.logger.Warn("⚠️ Branch named %s already exists", generatedBranch.Raw)
 
 		if !force {
 			switchBranchPrompt := promptui.Prompt{
@@ -50,14 +69,14 @@ func (command Branch) RunWithIssue(issue *issue.Issue, assign bool, force bool) 
 		}
 
 		// TODO: Handle error
-		command.git.SwitchBranch(branch.Raw)
-		command.logger.Info("✅ %s has just been checkout", branch.Raw)
+		command.git.SwitchBranch(generatedBranch.Raw)
+		command.logger.Info("✅ %s has just been checkout", generatedBranch.Raw)
 	} else {
 		if !force {
 			command.logger.Info("🌳 Branch will be generated\nPress %s to continue, %s to cancel", "ENTER", log.ErrorStyle.Render("CTRL+C"))
 			branchNamePrompt := promptui.Prompt{
 				Label:     "Branch",
-				Default:   branch.Raw,
+				Default:   generatedBranch.Raw,
 				Pointer:   promptui.PipeCursor,
 				AllowEdit: true,
 			}
@@ -65,19 +84,35 @@ func (command Branch) RunWithIssue(issue *issue.Issue, assign bool, force bool) 
 			if err != nil {
 				command.logger.Fatal("The operation was %s", "canceled")
 			}
-			branch.Raw = newBranchName
+			generatedBranch.Raw = newBranchName
 		}
 
-		command.git.CreateBranch(branch.Raw)
-		command.logger.Info("✅ %s branch was created", branch.Raw)
+		command.git.CreateBranch(generatedBranch.Raw)
+		command.logger.Info("✅ %s branch was created", generatedBranch.Raw)
 	}
 
 	if assign {
-		if assignError := command.tracker.SelfAssignIssue(branch.IssueID); assignError != nil {
+		if assignError := command.tracker.SelfAssignIssue(generatedBranch.IssueID); assignError != nil {
 			command.logger.Debug("%v", assignError)
 			command.logger.Info("❌ %s Unable to assign issue %s...", log.ErrorStyle.Render("Oups..."), issue.ID)
 		} else {
 			command.logger.Info("✅ Jira %s has been assigned to %s", issue.ID)
 		}
 	}
+}
+
+func (command *Branch) selectBranchName(branches []*branch.Branch) *branch.Branch {
+	items := make([]string, len(branches))
+	for index, branch := range branches {
+		items[index] = branch.Raw
+	}
+
+	typeSelect := promptui.Select{Label: "Branch name", Items: items}
+	index, _, err := typeSelect.Run()
+
+	if err != nil {
+		command.logger.Fatal("The operation was %s", "canceled")
+	}
+
+	return branches[index]
 }
