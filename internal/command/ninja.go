@@ -90,7 +90,7 @@ func (command Ninja) ask(label string) string {
 func (command Ninja) rewriteWithAI(label string, text string) string {
 	agent := ai.NewOpenAI(command.logger)
 	context := fmt.Sprintf("Issue creation, this is the %s of the new issue", label)
-	aiResponse, aiSuggestErr := agent.Rewrite(context, text)
+	aiResponse, aiSuggestErr := agent.IssueRewrite(context, text)
 
 	if aiSuggestErr == nil {
 		command.logger.Log("AI suggestion for %s:\n%s", label, aiResponse)

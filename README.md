@@ -209,10 +209,9 @@ This flexibility allows you to easily manage and switch between multiple Jira or
 
 #### AI-powered features
 
-
 Gira can enhance your workflow with **AI assistance**, helping you generate smarter branch names, commit messages and summaries, all without leaving your terminal.  
 
-When enabled via the `--ai` flag, AI features work alongside your Git, Jira, and GitHub integrations:  
+> When enabled via the `--ai` flag, AI features work alongside your Git, Jira, and GitHub integrations.
 
 **Available AI-powered capabilities:**
 - 🪄 **Branch name suggestions**: Automatically generate consistent and descriptive branch names from issue titles and descriptions.
@@ -273,8 +272,6 @@ _(click on the provider to display an example)_
   ```
 </details>
 
-<br/>
-
 ---
 
 ##### Usage <!-- omit in toc -->
@@ -307,6 +304,7 @@ Examples:
   gira branch -a ISSUE-123
 
 Flags:
+      --ai       enable AI-powered features
   -a, --assign   assign the issue to the currently logged-in user after creating the Git branch
   -f, --force    disable interactive prompts and force branch creation even if checks would normally prevent it
   -h, --help     help for branch
@@ -340,6 +338,7 @@ Examples:
   gira issue ABC-123
 
 Flags:
+      --ai     enable AI-powered features
   -h, --help   help for issue
 ```
 
@@ -381,7 +380,7 @@ It works with both Jira and GitHub Issues, making it easy to jump from the termi
 #### Usage <!-- omit in toc -->
 ```
 Usage:
-  gira gira open [issueId] [flags]
+  gira open [issueId] [flags]
 
 Examples:
   gira open
@@ -409,6 +408,7 @@ Usage:
   gira ninja [flags]
 
 Flags:
+      --ai      enable AI-powered features
   -f, --force   disable interactive prompts and force branch creation even if checks would normally prevent it
   -h, --help    help for issue
 ```

@@ -89,9 +89,12 @@ func (agent *OpenAI) IssueSummary(issue *issue.Issue) (string, error) {
 	return agent.askString(prompt)
 }
 
-func (agent *OpenAI) Rewrite(context string, text string) (string, error) {
+func (agent *OpenAI) IssueRewrite(context string, text string) (string, error) {
 	prompt := fmt.Sprintf(
-		"Context: %s\n\nRewrite the text below to be clearer and more precise, without adding extra information or changing meaning:\n\n%s",
+		"Rewrite the following issue text to improve clarity, spelling, and precision:\n"+
+			"- If the text is a *title* based on context: keep it short, direct, and informative.\n"+
+			"- If the text is a *description* based on context: keep it concise, only include the essential details, and avoid unnecessary length.\n\n"+
+			"Do not add new information or change the original meaning.\n\nContext: %s\n\nText:\n%s",
 		context, text,
 	)
 	return agent.askString(prompt)
