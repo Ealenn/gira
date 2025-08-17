@@ -50,7 +50,6 @@ type FromIssueOptions struct {
 func (manager *Manager) FromIssue(issue *issue.Issue, opts *FromIssueOptions) *Branch {
 	branchTitle := strings.ToLower(strings.TrimSpace(issue.Title))
 
-	// Override title if provided
 	if opts != nil && opts.TitleOverride != "" {
 		branchTitle = strings.ToLower(strings.TrimSpace(opts.TitleOverride))
 	}

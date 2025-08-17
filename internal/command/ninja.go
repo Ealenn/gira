@@ -31,8 +31,11 @@ func NewNinja(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *b
 func (command Ninja) Run(enableAI bool, force bool) {
 	issueOptions := command.createIssueOptions(enableAI)
 
+	command.logger.Log("\n------------ PREVIEW ------------")
 	command.logger.Log("Type:%s\nTitle: %s\nDescription:%s", issueOptions.Type, issueOptions.Title, issueOptions.Description)
-	if askContinue := command.askSelect("Continue", []string{"Yes", "No"}); askContinue == "No" {
+	command.logger.Log("---------------------------------\nWould you like to create this issue?")
+
+	if askContinue := command.askSelect("", []string{"Yes", "No"}); askContinue == "No" {
 		command.logger.Fatal("The operation was %s", "canceled")
 	}
 
@@ -63,7 +66,7 @@ func (command Ninja) createIssueOptions(enableAI bool) issue.CreateIssueOptions 
 }
 
 func (command Ninja) askSelect(label string, items interface{}) string {
-	prompt := promptui.Select{Label: label, HideSelected: true, Items: items}
+	prompt := promptui.Select{Label: label, HideSelected: true, HideHelp: true, Items: items}
 	_, str, err := prompt.Run()
 
 	if err != nil {
