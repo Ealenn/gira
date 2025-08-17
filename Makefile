@@ -52,6 +52,10 @@ debug: ##@project Execute Gira in verbose mode with provided arguments
 tidy: ##@tools Remove unused Go modules and tidy dependencies
 	@go mod tidy
 
+.PHONY: upgrade
+upgrade: tidy ##@tools Upgrade all dependencies to the latest version
+	@go get -u ./...
+
 .PHONY: lint
 lint: ##@tools Run linter to check code style
 	@golangci-lint run ./...

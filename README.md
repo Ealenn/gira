@@ -209,31 +209,77 @@ This flexibility allows you to easily manage and switch between multiple Jira or
 
 #### AI-powered features
 
-Gira can leverage AI to make your workflow smarter.
 
-With the `--ai` flag enabled, you can get features like:
+Gira can enhance your workflow with **AI assistance**, helping you generate smarter branch names, commit messages and summaries, all without leaving your terminal.  
 
-- Branch name suggestions based on issue titles and descriptions
-- Smart summaries and commit message drafts
-- Other context-aware assistance directly in your terminal
+When enabled via the `--ai` flag, AI features work alongside your Git, Jira, and GitHub integrations:  
 
-Gira supports both self-hosted AI backends (e.g., [LocalAI](https://localai.io)) and cloud providers like OpenAI or Mistral.
+**Available AI-powered capabilities:**
+- 🪄 **Branch name suggestions**: Automatically generate consistent and descriptive branch names from issue titles and descriptions.
+- ✍️ **Commit message drafts**: Get AI-generated commit messages based on changes and issue context (you can still edit before committing).
+- 📑 **Smart issue summaries**: Summarize long Jira or GitHub issue descriptions into concise overviews.
 
-Configuration is done via environment variables:
+AI integration is optional and controlled through **environment variables**. 
 
-| Environment Variable | Comment | LocalAI.io | ChatGPT | Mistral |
-|----------------------|---------|------------|---------|---------|
-| `GIRA_AI_ENDPOINT`   | The base URL of the AI endpoint. **(Required)** | `http://127.0.0.1:8080` <br/> see [localai.io](https://localai.io) | `https://api.openai.com` | `https://api.mistral.ai/v1` |
-| `GIRA_AI_MODEL`      | The model to use for generating responses. **(Required)** | `gemma-3-4b-it` | `o4-mini` <br/> see [model list](https://platform.openai.com/docs/models) | `mistral-small-latest` <br/> see [model list](https://docs.mistral.ai/getting-started/models/models_overview/) |
-| `GIRA_AI_APIKEY`     | API key used for authentication. | `123456789` | `123456789` <br/> see [API keys](https://platform.openai.com/api-keys) | `132456789` <br/> see [API Keys](https://console.mistral.ai/api-keys)
+| Environment Variable | Description |
+|----------------------|-------------|
+| `GIRA_AI_ENDPOINT`   | Base URL of the AI endpoint. **Required** |
+| `GIRA_AI_MODEL`      | Model name to use (depends on provider). **Required** |
+| `GIRA_AI_APIKEY`     | API key for authentication (if required by provider). |
 
-Add the environment variables to your shell config (`~/.zshrc`, `~/.bashrc`, etc.):
+##### Providers <!-- omit in toc -->
 
-```sh
-export GIRA_AI_ENDPOINT=https://api.openai.com
-export GIRA_AI_MODEL=o4-mini
-export GIRA_AI_APIKEY=sk-xxxxxxxx
-```
+You can connect Gira to both cloud-based APIs and self-hosted models:<br/>
+_(click on the provider to display an example)_
+
+<details>
+  <summary><strong>LocalAI</strong> (Self-hosted, free, private)</summary>
+  
+  - Runs entirely on your machine.
+  - Zero API costs, lower latency, and full privacy.
+  - Install: [localai.io](https://localai.io)
+
+    ```sh
+    export GIRA_AI_ENDPOINT=http://127.0.0.1:8080
+    export GIRA_AI_MODEL=o4-mini
+    export GIRA_AI_APIKEY=xxxxxxxx
+    ```
+</details>
+
+<details>
+  <summary><strong>MistralAI</strong> (Free-tiers)</summary>
+  
+  - Sign up at [console.mistral.ai](https://console.mistral.ai/) for your API key.
+  - See available models: [docs.mistral.ai](https://docs.mistral.ai/getting-started/models/models_overview/)
+  - Limitations and API cost [mistral.ai/plateforme/limits](https://admin.mistral.ai/plateforme/limits)
+
+  ```sh
+  export GIRA_AI_ENDPOINT=https://api.mistral.ai/v1
+  export GIRA_AI_MODEL=mistral-small-latest
+  export GIRA_AI_APIKEY=xxxxxxxx
+  ```
+</details>
+
+<details>
+  <summary><strong>OpenAI</strong> (ChatGPT)</summary>
+
+  - Get API keys at [platform.openai.com](https://platform.openai.com/api-keys)
+  - Model reference: [OpenAI models](https://platform.openai.com/docs/models)
+
+  ```sh
+  export GIRA_AI_ENDPOINT=https://api.openai.com
+  export GIRA_AI_MODEL=o4-mini
+  export GIRA_AI_APIKEY=sk-xxxxxxxx
+  ```
+</details>
+
+<br/>
+
+---
+
+##### Usage <!-- omit in toc -->
+
+Add the environment variables to your shell config (`~/.zshrc`, `~/.bashrc`, etc.)
 
 Then reload your shell and use `Gira` with the `--ai` flag !
 
