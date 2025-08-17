@@ -24,7 +24,7 @@ func NewOpenAI(logger *log.Logger) *OpenAI {
 	apikey := os.Getenv("GIRA_AI_APIKEY")
 	model := os.Getenv("GIRA_AI_MODEL")
 	if endpoint == "" || model == "" {
-		logger.Fatal("❌ AI configuration error: missing required environment variables. See", "https://github.com/Ealenn/gira")
+		logger.Fatal("❌ AI configuration error: missing required environment variables. See %s", "https://github.com/Ealenn/gira")
 	}
 
 	configuration := []option.RequestOption{}
