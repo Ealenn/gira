@@ -22,25 +22,25 @@ func NewVersion(logger *log.Logger, configuration *configuration.Configuration, 
 	}
 }
 
-func (command Version) Run() {
-	currentVersion := command.version.GetCurrentVersion()
-	command.logger.Info("Current version : %s", currentVersion)
+func (cmd Version) Run() {
+	currentVersion := cmd.version.GetCurrentVersion()
+	cmd.logger.Info("Current version : %s", currentVersion)
 
-	githubLastRelease, githubError := command.version.GetLatestRelease()
+	githubLastRelease, githubError := cmd.version.GetLatestRelease()
 	if githubError != nil {
-		command.logger.Debug("Unable to fetch latest version of Gira due to %v", githubError)
-		command.logger.Fatal("❌ Failed to fetch latest release from GitHub, check %s", "https://github.com/Ealenn/gira")
+		cmd.logger.Debug("Unable to fetch latest version of Gira due to %v", githubError)
+		cmd.logger.Fatal("❌ Failed to fetch latest release from GitHub, check %s", "https://github.com/Ealenn/gira")
 		return
 	}
 
 	latestTag := githubLastRelease.GetTagName()
-	command.logger.Info("Latest version on GitHub: %s %s", latestTag, log.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
+	cmd.logger.Info("Latest version on GitHub: %s %s", latestTag, log.DebugStyle.Render("(", githubLastRelease.CreatedAt.Format(time.RFC822), ")"))
 
 	if currentVersion == latestTag {
-		command.logger.Info("\n🚀 Gira is up to date.")
+		cmd.logger.Info("\n🚀 Gira is up to date.")
 	} else {
-		command.logger.Info("\n⚠️  A new version is available!\nCheck %s to update Gira", "https://github.com/Ealenn/gira")
+		cmd.logger.Info("\n⚠️  A new version is available!\nCheck %s to update Gira", "https://github.com/Ealenn/gira")
 	}
 
-	command.configuration.VersionChecked()
+	cmd.configuration.VersionChecked()
 }
