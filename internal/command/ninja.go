@@ -28,33 +28,33 @@ func NewNinja(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *b
 	}
 }
 
-func (command Ninja) Run(enableAI bool, force bool) {
-	issueOptions := command.createIssueOptions(enableAI)
+func (cmd Ninja) Run(enableAI bool, force bool) {
+	issueOptions := cmd.createIssueOptions(enableAI)
 
-	command.logger.Log("\n------------ PREVIEW ------------")
-	command.logger.Log("Type:%s\nTitle: %s\nDescription:%s", issueOptions.Type, issueOptions.Title, issueOptions.Description)
-	command.logger.Log("---------------------------------\nWould you like to create this issue?")
+	cmd.logger.Log("\n------------ PREVIEW ------------")
+	cmd.logger.Log("Type:%s\nTitle: %s\nDescription:%s", issueOptions.Type, issueOptions.Title, issueOptions.Description)
+	cmd.logger.Log("---------------------------------\nWould you like to create this issue?")
 
-	if askContinue := command.askSelect("", []string{"Yes", "No"}); askContinue == "No" {
-		command.logger.Fatal("The operation was %s", "canceled")
+	if askContinue := cmd.askSelect("", []string{"Yes", "No"}); askContinue == "No" {
+		cmd.logger.Fatal("The operation was %s", "canceled")
 	}
 
-	issue := command.tracker.CreateIssue(issueOptions)
-	command.logger.Info("Issue %s created, see %s", issue.ID, issue.URL)
+	issue := cmd.tracker.CreateIssue(issueOptions)
+	cmd.logger.Info("Issue %s created, see %s", issue.ID, issue.URL)
 
-	NewBranch(command.logger, command.tracker, command.git, command.branch).RunWithIssue(issue, true, enableAI, force)
+	NewBranch(cmd.logger, cmd.tracker, cmd.git, cmd.branch).RunWithIssue(issue, true, enableAI, force)
 }
 
-func (command Ninja) createIssueOptions(enableAI bool) issue.CreateIssueOptions {
-	issueTypeString := command.askSelect("Type", []issue.Type{issue.TypeFeature, issue.TypeBug})
-	project := command.ask("Project")
-	title := command.ask("Title")
+func (cmd Ninja) createIssueOptions(enableAI bool) issue.CreateIssueOptions {
+	issueTypeString := cmd.askSelect("Type", []issue.Type{issue.TypeFeature, issue.TypeBug})
+	project := cmd.ask("Project")
+	title := cmd.ask("Title")
 	if enableAI {
-		title = command.rewriteWithAI("Title", title)
+		title = cmd.rewriteWithAI("Title", title)
 	}
-	description := command.ask("Description")
+	description := cmd.ask("Description")
 	if enableAI {
-		description = command.rewriteWithAI("Description", description)
+		description = cmd.rewriteWithAI("Description", description)
 	}
 
 	return issue.CreateIssueOptions{
@@ -65,35 +65,35 @@ func (command Ninja) createIssueOptions(enableAI bool) issue.CreateIssueOptions 
 	}
 }
 
-func (command Ninja) askSelect(label string, items interface{}) string {
+func (cmd Ninja) askSelect(label string, items interface{}) string {
 	prompt := promptui.Select{Label: label, HideSelected: true, HideHelp: true, Items: items}
 	_, str, err := prompt.Run()
 
 	if err != nil {
-		command.logger.Fatal("The operation was %s", "canceled")
+		cmd.logger.Fatal("The operation was %s", "canceled")
 	}
 
 	return str
 }
 
-func (command Ninja) ask(label string) string {
+func (cmd Ninja) ask(label string) string {
 	prompt := promptui.Prompt{Label: label, HideEntered: true}
 	result, err := prompt.Run()
 
 	if err != nil {
-		command.logger.Fatal("The operation was %s", "canceled")
+		cmd.logger.Fatal("The operation was %s", "canceled")
 	}
 
 	return result
 }
 
-func (command Ninja) rewriteWithAI(label string, text string) string {
-	agent := ai.NewOpenAI(command.logger)
+func (cmd Ninja) rewriteWithAI(label string, text string) string {
+	agent := ai.NewOpenAI(cmd.logger)
 	context := fmt.Sprintf("Issue creation, this is the %s of the new issue", label)
 	aiResponse, aiSuggestErr := agent.IssueRewrite(context, text)
 
 	if aiSuggestErr == nil {
-		command.logger.Log("AI suggestion for %s:\n%s", label, aiResponse)
+		cmd.logger.Log("AI suggestion for %s:\n%s", label, aiResponse)
 		confirmPrompt := promptui.Prompt{Label: "Would you like to apply it? ", IsConfirm: true, HideEntered: true}
 		confirmResult, _ := confirmPrompt.Run()
 

@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"regexp"
+	"time"
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/git"
@@ -125,10 +127,17 @@ func (tracker *JiraTracker) formatIssue(issue *models.IssueSchemeV2) *Issue {
 	return &Issue{
 		ID:          issue.Key,
 		Title:       issue.Fields.Summary,
-		Description: issue.Fields.Description,
+		Description: tracker.toMarkdown(issue.Fields.Description),
 		Status:      issue.Fields.Status.Name,
 		Types:       []string{issue.Fields.IssueType.Name},
 		URL:         fmt.Sprintf("%s%s%s", tracker.profile.Jira.Host, "/browse/", issue.Key),
 		Assignees:   assignees,
+		CreatedAt:   time.Time(*issue.Fields.Created),
 	}
+}
+
+func (tracker *JiraTracker) toMarkdown(content string) string {
+	content = regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(content, "$1 $2")
+	content = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(content, "$1")
+	return content
 }

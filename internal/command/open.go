@@ -21,17 +21,17 @@ func NewOpen(logger *log.Logger, branch *branch.Manager, tracker issue.Tracker) 
 	}
 }
 
-func (command Open) Run(optionalIssueID *string) {
-	browser := browser.NewBrowser(command.logger)
+func (cmd Open) Run(optionalIssueID *string) {
+	browser := browser.NewBrowser(cmd.logger)
 
 	var issueID string
 	if optionalIssueID != nil {
 		issueID = *optionalIssueID
 	} else {
-		issueID = command.branch.GetCurrentBranch().IssueID
+		issueID = cmd.branch.GetCurrentBranch().IssueID
 	}
 
-	issue := command.tracker.GetIssue(issueID)
-	command.logger.Info("Open Issue %s : %s", issue.ID, issue.Title)
+	issue := cmd.tracker.GetIssue(issueID)
+	cmd.logger.Info("Open Issue %s : %s", issue.ID, issue.Title)
 	browser.Open(issue.URL)
 }

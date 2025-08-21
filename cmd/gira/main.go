@@ -16,13 +16,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose bool
-var profile *configuration.Profile
-var gitManager *git.Git
-var branchManager *branch.Manager
-var tracker issue.Tracker
-var currentProfileName string
-var enableAI bool
+var (
+	verbose            bool
+	profile            *configuration.Profile
+	gitManager         *git.Git
+	branchManager      *branch.Manager
+	tracker            issue.Tracker
+	currentProfileName string
+	enableAI           bool
+)
 
 func preProfile(logger *log.Logger, config *configuration.Configuration) {
 	profile = config.GetProfile(currentProfileName)
