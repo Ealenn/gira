@@ -22,10 +22,9 @@ type Issue struct {
 	git     *git.Git
 	branch  *branch.Manager
 
-	width    int
-	height   int
-	quitting bool
-	open     bool
+	action string
+	width  int
+	height int
 
 	focus                    string
 	componentAttributes      viewport.Model
@@ -70,10 +69,16 @@ func (cmd *Issue) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
-			cmd.quitting = true
+			cmd.action = "quit"
 			return cmd, tea.Quit
 		case "o":
-			cmd.open = true
+			cmd.action = "open"
+			return cmd, tea.Quit
+		case "a":
+			cmd.action = "assign"
+			return cmd, tea.Quit
+		case "b":
+			cmd.action = "branch"
 			return cmd, tea.Quit
 		}
 	}
@@ -92,7 +97,7 @@ func (cmd *Issue) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (cmd *Issue) View() string {
-	if cmd.quitting {
+	if cmd.action != "" {
 		return ""
 	}
 
@@ -138,7 +143,7 @@ func (cmd *Issue) View() string {
 	rightBox := contentStyle.Render(cmd.componentContent.View())
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftBox, rightBox)
 
-	helpBar := helpStyle.Render("ESC/CTRL+C Quit | ↑/↓ Scroll | o Open ")
+	helpBar := helpStyle.Render("ESC/CTRL+C Quit | ↑/↓ Scroll | a Assign | b Branch | o Open")
 	return lipgloss.JoinVertical(lipgloss.Left, mainContent, helpBar)
 }
 
@@ -165,7 +170,7 @@ func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
 		}
 	}
 
-	cmd.componentAttributesValue = fmt.Sprintf("# %s (%s)\n\r", issue.ID, issue.Status)
+	cmd.componentAttributesValue = fmt.Sprintf("> #%s\n\nStatus: %s\n\n", issue.ID, issue.Status)
 	cmd.componentAttributesValue += "\n> Types \n\n"
 	for _, tag := range issue.Types {
 		cmd.componentAttributesValue += fmt.Sprintf("- %s\n\n", tag)
@@ -186,8 +191,14 @@ func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
 		cmd.logger.Fatal("Gira fatal exception : %v", err)
 	}
 
-	if cmd.open {
+	switch cmd.action {
+	case "open":
 		NewOpen(cmd.logger, cmd.branch, cmd.tracker).Run(optionalIssueID)
+	case "assign":
+		cmd.tracker.SelfAssignIssue(issueID)
+		NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(&issueID, enableAI)
+	case "branch":
+		NewBranch(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(issueID, false, enableAI, false)
 	}
 }
 
