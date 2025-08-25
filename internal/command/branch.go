@@ -86,7 +86,7 @@ func (cmd Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force 
 			cmd.logger.Debug("%v", assignError)
 			cmd.logger.Info("❌ %s Unable to assign issue %s...", log.ErrorStyle.Render("Oups..."), issue.ID)
 		} else {
-			cmd.logger.Info("✅ Jira %s has been assigned to %s", issue.ID)
+			cmd.logger.Info("✅ Jira %s has been assigned", issue.ID)
 		}
 	}
 }

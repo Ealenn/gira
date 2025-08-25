@@ -1,8 +1,9 @@
 package forms
 
 import (
-	"github.com/Ealenn/gira/internal/log"
 	"github.com/charmbracelet/huh"
+
+	"github.com/Ealenn/gira/internal/log"
 )
 
 type ConfirmResult struct {
