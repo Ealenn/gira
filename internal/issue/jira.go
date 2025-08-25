@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"regexp"
+	"time"
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/git"
@@ -33,11 +35,7 @@ func NewJira(logger *log.Logger, profile *configuration.Profile, git *git.Git) *
 		logger.Fatal("Unable to create Jira Client")
 	}
 
-	if profile.Jira.Email != "" {
-		client.Auth.SetBasicAuth(profile.Jira.Email, profile.Jira.Token)
-	} else {
-		client.Auth.SetBearerToken(profile.Jira.Token)
-	}
+	client.Auth.SetBearerToken(profile.Jira.Token)
 
 	return &JiraTracker{
 		logger:     logger,
@@ -93,9 +91,14 @@ func (tracker *JiraTracker) GetMyself() (*models.UserScheme, error) {
 func (tracker *JiraTracker) SelfAssignIssue(issueKeyID string) error {
 	ctx := context.Background()
 
+	user, getMyselfErr := tracker.GetMyself()
+	if getMyselfErr != nil {
+		return getMyselfErr
+	}
+
 	// For Jira Cloud, use AccountID
-	if tracker.profile.Jira.AccountID != "" {
-		_, err := tracker.jiraClient.Issue.Assign(ctx, issueKeyID, tracker.profile.Jira.AccountID)
+	if user.AccountID != "" {
+		_, err := tracker.jiraClient.Issue.Assign(ctx, issueKeyID, user.AccountID)
 		return err
 	}
 
@@ -103,8 +106,8 @@ func (tracker *JiraTracker) SelfAssignIssue(issueKeyID string) error {
 	_, err := tracker.jiraClient.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
 			Assignee: &models.UserScheme{
-				Key:  tracker.profile.Jira.UserKey,
-				Name: tracker.profile.Jira.UserKey,
+				Key:  user.Key,
+				Name: user.Key,
 			},
 		},
 	}, nil, nil)
@@ -125,10 +128,17 @@ func (tracker *JiraTracker) formatIssue(issue *models.IssueSchemeV2) *Issue {
 	return &Issue{
 		ID:          issue.Key,
 		Title:       issue.Fields.Summary,
-		Description: issue.Fields.Description,
+		Description: tracker.toMarkdown(issue.Fields.Description),
 		Status:      issue.Fields.Status.Name,
 		Types:       []string{issue.Fields.IssueType.Name},
 		URL:         fmt.Sprintf("%s%s%s", tracker.profile.Jira.Host, "/browse/", issue.Key),
 		Assignees:   assignees,
+		CreatedAt:   time.Time(*issue.Fields.Created),
 	}
+}
+
+func (tracker *JiraTracker) toMarkdown(content string) string {
+	content = regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(content, "$1 $2")
+	content = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(content, "$1")
+	return content
 }

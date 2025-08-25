@@ -138,5 +138,6 @@ func (tracker *GitHubTracker) formatIssue(issue *github.Issue) *Issue {
 		Types:       labels,
 		Assignees:   assignees,
 		URL:         issue.GetHTMLURL(),
+		CreatedAt:   issue.CreatedAt.Time,
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/Ealenn/gira/internal/log"
@@ -51,6 +52,18 @@ func New(logger *log.Logger) *Configuration {
 		JSON:   jsonConfiguration,
 		Path:   configurationFilePath,
 	}
+}
+
+func (configuration *Configuration) RemoveProfile(profile Profile) error {
+	for index, jsonProfile := range configuration.JSON.Profiles {
+		if jsonProfile.Name == profile.Name {
+			configuration.JSON.Profiles = slices.Delete(configuration.JSON.Profiles, index, index+1)
+			break
+		}
+	}
+
+	_, err := updateConfiguration(configuration.Path, configuration.JSON)
+	return err
 }
 
 func (configuration *Configuration) AddProfile(newProfile Profile) error {

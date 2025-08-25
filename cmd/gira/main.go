@@ -16,13 +16,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose bool
-var profile *configuration.Profile
-var gitManager *git.Git
-var branchManager *branch.Manager
-var tracker issue.Tracker
-var currentProfileName string
-var enableAI bool
+var (
+	verbose            bool
+	profile            *configuration.Profile
+	gitManager         *git.Git
+	branchManager      *branch.Manager
+	tracker            issue.Tracker
+	currentProfileName string
+	enableAI           bool
+)
 
 func preProfile(logger *log.Logger, config *configuration.Configuration) {
 	profile = config.GetProfile(currentProfileName)
@@ -109,7 +111,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preRun(logger, configuration, version)
-			command.NewNinja(logger, tracker, gitManager, branchManager).Run(enableAI, ninjaCommandForceFlag)
+			command.NewNinja(logger, profile, tracker, gitManager, branchManager).Run(enableAI, ninjaCommandForceFlag)
 		},
 	}
 	ninjaCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")
@@ -176,6 +178,7 @@ If an issue ID is specified, the command will display information for that issue
 	 * ----------------------
 	 */
 	var configListFlag bool
+	var configRemoveFlag bool
 	var configCommand = &cobra.Command{
 		Use:   "config",
 		Short: "Configure Gira profile with accounts and tokens",
@@ -189,10 +192,11 @@ This information is stored in your configuration file and enables Gira to commun
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preProfile(logger, configuration)
-			command.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag)
+			command.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag, configRemoveFlag)
 		},
 	}
 	configCommand.Flags().BoolVarP(&configListFlag, "list", "l", false, "list all available profiles")
+	configCommand.Flags().BoolVarP(&configRemoveFlag, "remove", "r", false, "remove selected profile")
 	rootCmd.AddCommand(configCommand)
 
 	/* ----------------------

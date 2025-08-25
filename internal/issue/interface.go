@@ -1,5 +1,7 @@
 package issue
 
+import "time"
+
 type Type string
 
 const (
@@ -21,6 +23,7 @@ type Issue struct {
 	Types       []string
 	Assignees   []Assignee
 	URL         string
+	CreatedAt   time.Time
 }
 
 type CreateIssueOptions struct {
