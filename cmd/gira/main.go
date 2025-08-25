@@ -111,7 +111,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preRun(logger, configuration, version)
-			command.NewNinja(logger, tracker, gitManager, branchManager).Run(enableAI, ninjaCommandForceFlag)
+			command.NewNinja(logger, profile, tracker, gitManager, branchManager).Run(enableAI, ninjaCommandForceFlag)
 		},
 	}
 	ninjaCommand.Flags().BoolVarP(&branchCommandForceFlag, "force", "f", false, "disable interactive prompts and force branch creation even if checks would normally prevent it")

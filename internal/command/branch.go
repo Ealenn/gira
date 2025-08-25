@@ -3,11 +3,10 @@ package command
 import (
 	"github.com/Ealenn/gira/internal/ai"
 	"github.com/Ealenn/gira/internal/branch"
+	"github.com/Ealenn/gira/internal/command/forms"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
 	"github.com/Ealenn/gira/internal/log"
-
-	"github.com/manifoldco/promptui"
 )
 
 type Branch struct {
@@ -48,48 +47,39 @@ func (cmd Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force 
 				}))
 			}
 
-			generatedBranch = cmd.selectBranchName(branches)
+			generatedBranch = &forms.NewSelect(cmd.logger).Ask("Choose the branch name to create", "(You will be able to edit it afterwards)", branches...).Branch
 		}
+	}
+
+	if !force {
+		forms.NewEditBranch(cmd.logger).Ask("Edit", "", generatedBranch)
 	}
 
 	if cmd.git.IsBranchExist(generatedBranch.Raw) {
 		cmd.logger.Warn("⚠️ Branch named %s already exists", generatedBranch.Raw)
 
 		if !force {
-			switchBranchPrompt := promptui.Prompt{
-				Label:     "Would you like to switch to this branch?",
-				IsConfirm: true,
-				Default:   "y",
-			}
-			_, switchBranchPromptError := switchBranchPrompt.Run()
-
-			if switchBranchPromptError != nil {
+			if !forms.NewConfirm(cmd.logger).Ask("Would you like to switch to this branch?", generatedBranch.Raw, forms.TypeYesNo).Confirmed {
 				cmd.logger.Fatal("The operation was %s", "canceled")
 			}
 		}
-
-		// TODO: Handle error
-		cmd.git.SwitchBranch(generatedBranch.Raw)
+		cmd.git.SwitchBranch(generatedBranch.Raw) // TODO: Handle error
 		cmd.logger.Info("✅ %s has just been checkout", generatedBranch.Raw)
-	} else {
-		if !force {
-			cmd.logger.Info("🌳 Branch will be generated\nPress %s to continue, %s to cancel", "ENTER", log.ErrorStyle.Render("CTRL+C"))
-			branchNamePrompt := promptui.Prompt{
-				Label:     "Branch",
-				Default:   generatedBranch.Raw,
-				Pointer:   promptui.PipeCursor,
-				AllowEdit: true,
-			}
-			newBranchName, err := branchNamePrompt.Run()
-			if err != nil {
-				cmd.logger.Fatal("The operation was %s", "canceled")
-			}
-			generatedBranch.Raw = newBranchName
-		}
-
-		cmd.git.CreateBranch(generatedBranch.Raw)
-		cmd.logger.Info("✅ %s branch was created", generatedBranch.Raw)
+		return
 	}
+
+	if !force {
+		if !forms.NewConfirm(cmd.logger).Ask(
+			"🌳 Would you like to create this branch?",
+			generatedBranch.Raw,
+			forms.TypeConfirm,
+		).Confirmed {
+			cmd.logger.Fatal("The operation was %s", "canceled")
+		}
+	}
+
+	cmd.git.CreateBranch(generatedBranch.Raw)
+	cmd.logger.Info("✅ %s branch was created", generatedBranch.Raw)
 
 	if assign {
 		if assignError := cmd.tracker.SelfAssignIssue(generatedBranch.IssueID); assignError != nil {
@@ -99,20 +89,4 @@ func (cmd Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force 
 			cmd.logger.Info("✅ Jira %s has been assigned to %s", issue.ID)
 		}
 	}
-}
-
-func (cmd *Branch) selectBranchName(branches []*branch.Branch) *branch.Branch {
-	items := make([]string, len(branches))
-	for index, branch := range branches {
-		items[index] = branch.Raw
-	}
-
-	typeSelect := promptui.Select{Label: "Branch name", Items: items}
-	index, _, err := typeSelect.Run()
-
-	if err != nil {
-		cmd.logger.Fatal("The operation was %s", "canceled")
-	}
-
-	return branches[index]
 }
