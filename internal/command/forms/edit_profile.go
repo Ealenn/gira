@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/charmbracelet/huh"
+
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/charmbracelet/huh"
 )
 
 type EditProfile struct {
@@ -78,6 +79,7 @@ func (form EditProfile) getAccountForm(profile *configuration.Profile) *huh.Form
 				Value(&profile.Jira.Host),
 			huh.NewInput().
 				Title("Token").
+				Description("See https://support.atlassian.com/organization-administration/docs/understand-user-api-tokens/").
 				EchoMode(huh.EchoModePassword).
 				Value(&profile.Jira.Token),
 		))
@@ -88,6 +90,7 @@ func (form EditProfile) getAccountForm(profile *configuration.Profile) *huh.Form
 				Value(&profile.Github.User),
 			huh.NewInput().
 				Title("Token").
+				Description("See https://github.com/settings/tokens").
 				EchoMode(huh.EchoModePassword).
 				Value(&profile.Github.Token),
 		))

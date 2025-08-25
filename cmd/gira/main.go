@@ -178,6 +178,7 @@ If an issue ID is specified, the command will display information for that issue
 	 * ----------------------
 	 */
 	var configListFlag bool
+	var configRemoveFlag bool
 	var configCommand = &cobra.Command{
 		Use:   "config",
 		Short: "Configure Gira profile with accounts and tokens",
@@ -191,10 +192,11 @@ This information is stored in your configuration file and enables Gira to commun
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preProfile(logger, configuration)
-			command.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag)
+			command.NewConfig(logger, configuration, profile).Run(currentProfileName, configListFlag, configRemoveFlag)
 		},
 	}
 	configCommand.Flags().BoolVarP(&configListFlag, "list", "l", false, "list all available profiles")
+	configCommand.Flags().BoolVarP(&configRemoveFlag, "remove", "r", false, "remove selected profile")
 	rootCmd.AddCommand(configCommand)
 
 	/* ----------------------

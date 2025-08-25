@@ -1,9 +1,10 @@
 package forms
 
 import (
+	"github.com/charmbracelet/huh"
+
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/log"
-	"github.com/charmbracelet/huh"
 )
 
 type SelectBranchResult struct {
