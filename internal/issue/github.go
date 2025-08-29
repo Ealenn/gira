@@ -34,6 +34,27 @@ func NewGitHub(logger *log.Logger, profile *configuration.Profile, git *git.Git)
 	}
 }
 
+func (tracker *GitHubTracker) SearchIssues(status string) map[string]*Issue {
+	username, repository := tracker.getCurrentRepository()
+	issues, response, err := tracker.githubClient.Issues.ListByRepo(context.Background(), username, repository, &github.IssueListByRepoOptions{
+		State: status,
+	})
+
+	if err != nil {
+		tracker.logger.Debug("Search issues response status %s with error %v", response.Status, err)
+		tracker.logger.Fatal("❌ Unable to find issues")
+	}
+
+	filteredIssues := make(map[string]*Issue)
+	for _, issue := range issues {
+		if !issue.IsPullRequest() {
+			filteredIssues[tracker.getIssueString(issue.GetNumber())] = tracker.formatIssue(issue)
+		}
+	}
+
+	return filteredIssues
+}
+
 func (tracker *GitHubTracker) GetIssue(issueKeyID string) *Issue {
 	issueNumber := tracker.getIssueNumber(issueKeyID)
 	username, repository := tracker.getCurrentRepository()

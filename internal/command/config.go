@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/Ealenn/gira/internal/command/forms"
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/log"
@@ -45,13 +47,14 @@ func (cmd Config) Run(profileName string, list bool, remove bool) {
 	}
 
 	/*
-	 * List
+	 * Remove
 	 */
 	if remove {
-		cmd.logger.Info("Remove profile : %s...", profileName)
 		if profileExist {
-			err := cmd.configuration.RemoveProfile(*cmd.profile)
-			if err != nil {
+			if !forms.NewConfirm(cmd.logger).Ask(fmt.Sprintf("Confirm deletion of profile : %s", profileName), fmt.Sprintf("The profile %s will be deleted", profileName), forms.TypeConfirm).Confirmed {
+				cmd.logger.Fatal("The operation was %s", "canceled")
+			}
+			if err := cmd.configuration.RemoveProfile(*cmd.profile); err != nil {
 				cmd.logger.Fatal("❌ Unable to save configuration")
 			}
 		}

@@ -41,7 +41,7 @@ func New(logger *log.Logger) *Configuration {
 	} else {
 		fileContent, readConfigurationError := readConfiguration(configurationFilePath)
 		if readConfigurationError != nil {
-			logger.Fatal("unable to read configuration in %s due to %v", configurationFilePath, readConfigurationError)
+			logger.Fatal("⚠️  %s\nPlease run the %s command or change your configuration here %s", "Configuration is invalid", "gira config", configurationFilePath)
 		}
 
 		jsonConfiguration = *fileContent

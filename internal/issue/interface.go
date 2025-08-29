@@ -34,6 +34,7 @@ type CreateIssueOptions struct {
 }
 
 type Tracker interface {
+	SearchIssues(status string) map[string]*Issue
 	GetIssue(issueKeyID string) *Issue
 	CreateIssue(options CreateIssueOptions) *Issue
 	SelfAssignIssue(issueKeyID string) error
