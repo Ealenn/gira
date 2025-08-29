@@ -68,7 +68,7 @@ func (cmd *Issue) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "esc":
+		case "ctrl+c", "esc", "q":
 			cmd.action = "quit"
 			return cmd, tea.Quit
 		case "o":
@@ -143,23 +143,17 @@ func (cmd *Issue) View() string {
 	rightBox := contentStyle.Render(cmd.componentContent.View())
 	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftBox, rightBox)
 
-	helpBar := helpStyle.Render("ESC/CTRL+C Quit | ↑/↓ Scroll | a Assign | b Branch | o Open")
+	helpBar := helpStyle.Render("ESC/Q Quit | ↑/↓ Scroll | a Assign | b Branch | o Open")
 	return lipgloss.JoinVertical(lipgloss.Left, mainContent, helpBar)
 }
 
-/* ----------------------
-   Runner
------------------------*/
+/*
+	----------------------
+	  Runner
 
-func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
-	var issueID string
-	if optionalIssueID != nil {
-		issueID = *optionalIssueID
-	} else {
-		issueID = cmd.branch.GetCurrentBranch().IssueID
-	}
-	issue := cmd.tracker.GetIssue(issueID)
-
+-----------------------
+*/
+func (cmd *Issue) RunWithIssue(issue *issue.Issue, enableAI bool) {
 	cmd.componentContentValue = fmt.Sprintf("# %s\n\r\n\r%s", issue.Title, issue.Description)
 	if enableAI {
 		agent := ai.NewOpenAI(cmd.logger)
@@ -193,13 +187,25 @@ func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
 
 	switch cmd.action {
 	case "open":
-		NewOpen(cmd.logger, cmd.branch, cmd.tracker).Run(optionalIssueID)
+		NewOpen(cmd.logger, cmd.branch, cmd.tracker).Run(&issue.ID)
 	case "assign":
-		cmd.tracker.SelfAssignIssue(issueID)
-		NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(&issueID, enableAI)
+		cmd.tracker.SelfAssignIssue(issue.ID)
+		NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).RunWithIssue(issue, enableAI)
 	case "branch":
-		NewBranch(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(issueID, false, enableAI, false)
+		NewBranch(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(issue.ID, false, enableAI, false)
 	}
+}
+
+func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
+	var issueID string
+	if optionalIssueID != nil {
+		issueID = *optionalIssueID
+	} else {
+		issueID = cmd.branch.GetCurrentBranch().IssueID
+	}
+	issue := cmd.tracker.GetIssue(issueID)
+
+	cmd.RunWithIssue(issue, enableAI)
 }
 
 func (cmd *Issue) renderComponents() {

@@ -23,6 +23,7 @@ Use Gira to speed up development workflows, reduce context switching, and stream
     - [AI-powered features](#ai-powered-features)
   - [🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)](#-branch-create-a-new-git-branch-using-issue-id-jira-or-github)
   - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
+  - [📊 `dash`: Open your issue dashboard (GitHub / Jira)](#-dash-open-your-issue-dashboard-github--jira)
   - [🌐 `open`: Open the issue in your browser](#-open-open-the-issue-in-your-browser)
   - [🥷 `ninja`: Create a new issue and branch in one go](#-ninja-create-a-new-issue-and-branch-in-one-go)
 
@@ -343,6 +344,27 @@ Flags:
 #### Example <!-- omit in toc -->
 
 ![](./.github/img/gira-issue.png)
+
+### 📊 `dash`: Open your issue dashboard (GitHub / Jira)
+
+It’s a quick way to get an overview of all issues : open, in-progress, or closed without needing to navigate manually.
+
+Use it whenever you want to jump from the terminal to the broader issue tracker and see the full context of your work.
+
+#### Usage <!-- omit in toc -->
+```
+Usage:
+  gira dash
+
+Flags:
+      --ai              enable AI-powered features
+  -s, --status string   filter issues by status (default "all")
+  -h, --help            help for issue
+```
+
+#### Example <!-- omit in toc -->
+
+![](./.github/img/gira-dash.png)
 
 ### 🌐 `open`: Open the issue in your browser
 

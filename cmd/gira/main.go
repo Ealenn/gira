@@ -99,6 +99,29 @@ This helps enforce consistent naming conventions and improve traceability betwee
 	rootCmd.AddCommand(branchCommand)
 
 	/* ----------------------
+	 * Dashboard
+	 * ----------------------
+	 */
+	var dashboardStatusFlag *string
+	var dashboardCommand = &cobra.Command{
+		Use:   "dash [issue]",
+		Short: "Open your issue dashboard",
+		Long: `
+It's a quick way to get an overview of all issues : open, in-progress, or closed without needing to navigate manually.
+
+Use it whenever you want to jump from the terminal to the broader issue tracker and see the full context of your work.`,
+		Example: "  gira dash",
+		Aliases: []string{"dashboard"},
+		Args:    cobra.MinimumNArgs(0),
+		Run: func(_ *cobra.Command, _ []string) {
+			preRun(logger, configuration, version)
+			command.NewDashboard(logger, profile, tracker).Run(dashboardStatusFlag)
+		},
+	}
+	dashboardStatusFlag = dashboardCommand.Flags().StringP("status", "s", "all", "filter issues by status")
+	rootCmd.AddCommand(dashboardCommand)
+
+	/* ----------------------
 	 * Ninja
 	 * ----------------------
 	 */

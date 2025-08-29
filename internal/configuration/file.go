@@ -22,6 +22,8 @@ type Profile struct {
 type Jira struct {
 	Host  string `json:"host,omitempty"`
 	Token string `json:"token,omitempty"`
+	Board string `json:"board,omitempty"`
+	JQL   string `json:"jql,omitempty"`
 }
 
 type Github struct {

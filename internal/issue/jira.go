@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/log"
 
+	"github.com/ctreminiom/go-atlassian/v2/jira/agile"
 	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 )
@@ -21,28 +24,59 @@ type JiraTracker struct {
 	profile    *configuration.Profile
 	git        *git.Git
 	jiraClient *v2.Client
+	agilClient *agile.Client
 }
 
 func NewJira(logger *log.Logger, profile *configuration.Profile, git *git.Git) *JiraTracker {
-	client, err := v2.New(&http.Client{
+	baseClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-	}, profile.Jira.Host)
+	}
 
+	client, err := v2.New(baseClient, profile.Jira.Host)
 	if err != nil {
 		logger.Debug("Jira client error: %v", err)
 		logger.Fatal("Unable to create Jira Client")
 	}
-
 	client.Auth.SetBearerToken(profile.Jira.Token)
+
+	agileClient, err := agile.New(baseClient, profile.Jira.Host)
+	if err != nil {
+		logger.Debug("Jira Agile client error: %v", err)
+		logger.Fatal("Unable to create Jira Agile Client")
+	}
+	agileClient.Auth.SetBearerToken(profile.Jira.Token)
 
 	return &JiraTracker{
 		logger:     logger,
 		profile:    profile,
 		git:        git,
 		jiraClient: client,
+		agilClient: agileClient,
 	}
+}
+
+func (tracker *JiraTracker) SearchIssues(status string) map[string]*Issue {
+	boardID, _ := strconv.Atoi(tracker.profile.Jira.Board)
+	issue, issueResponse, err := tracker.agilClient.Board.Issues(context.Background(), boardID, &models.IssueOptionScheme{
+		JQL: tracker.profile.Jira.JQL,
+	}, 0, 100)
+
+	if err != nil {
+		tracker.logger.Debug("Search issues error : %s", err)
+		tracker.logger.Debug("Search issues response status %s", issueResponse.Status)
+		tracker.logger.Fatal("❌ Unable to search issues")
+	}
+
+	filteredIssues := make(map[string]*Issue)
+	for _, issue := range issue.Issues {
+		if strings.EqualFold(status, "all") || strings.EqualFold(status, issue.Fields.Status.Name) {
+			filteredIssues[issue.Key] = tracker.formatIssue(issue)
+		}
+	}
+
+	return filteredIssues
 }
 
 func (tracker *JiraTracker) GetIssue(issueKeyID string) *Issue {

@@ -3,6 +3,7 @@ package forms
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/charmbracelet/huh"
 
@@ -82,6 +83,21 @@ func (form EditProfile) getAccountForm(profile *configuration.Profile) *huh.Form
 				Description("See https://support.atlassian.com/organization-administration/docs/understand-user-api-tokens/").
 				EchoMode(huh.EchoModePassword).
 				Value(&profile.Jira.Token),
+		), huh.NewGroup(
+			huh.NewInput().
+				Title("Dashboard ID").
+				Description("Optional: Used to fetch issues, keep empty if you don't use 'dash' command").
+				Validate(func(s string) error {
+					if _, err := strconv.Atoi(s); s != "" && err != nil {
+						return fmt.Errorf("❌ %s (example: %s)", "Please enter a valid Dashboard ID", "1234")
+					}
+					return nil
+				}).
+				Value(&profile.Jira.Board),
+			huh.NewInput().
+				Title("JQL").
+				Description("Optional: Used to filter issues on 'dash' command").
+				Value(&profile.Jira.JQL),
 		))
 	case configuration.ProfileTypeGithub:
 		steps = append(steps, huh.NewGroup(
