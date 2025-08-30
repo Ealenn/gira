@@ -37,7 +37,7 @@ func (form Confirm) Ask(title string, description string, confirmType ConfirmTyp
 	err := form.ui.Run()
 
 	if err != nil {
-		form.logger.Fatal("The operation was %s", "canceled")
+		form.logger.Fatal("❌ The operation was %s", "canceled")
 	}
 
 	form.ui.View()

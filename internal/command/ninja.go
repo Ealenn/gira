@@ -37,16 +37,16 @@ func (cmd Ninja) Run(enableAI bool, force bool) {
 	if enableAI {
 		titleSuggestion, titleSuggestionErr := agent.IssueRewrite("Issue creation, this is the Title of the new issue", options.Title)
 		if titleSuggestionErr == nil && forms.NewConfirm(cmd.logger).Ask(
-			"🤖 Title suggestion", titleSuggestion, forms.TypeApply,
+			"🤖 Title suggestion", fmt.Sprintf("Replace:\n%s\nBy:\n%s", options.Title, titleSuggestion), forms.TypeApply,
 		).Confirmed {
 			options.Title = titleSuggestion
 		}
 
-		descriptionSuggestion, descriptionSuggestionErr := agent.IssueRewrite("Issue creation, this is the Title of the new issue", options.Title)
+		descriptionSuggestion, descriptionSuggestionErr := agent.IssueRewrite("Issue creation, this is the Description of the new issue", options.Description)
 		if descriptionSuggestionErr == nil && forms.NewConfirm(cmd.logger).Ask(
-			"🤖 Description suggestion", descriptionSuggestion, forms.TypeApply,
+			"🤖 Description suggestion", fmt.Sprintf("Replace:\n%s\nBy:\n%s", options.Description, descriptionSuggestion), forms.TypeApply,
 		).Confirmed {
-			options.Title = descriptionSuggestion
+			options.Description = descriptionSuggestion
 		}
 	}
 

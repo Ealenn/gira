@@ -33,6 +33,7 @@ type Dash struct {
 	branch  *branch.Manager
 	profile *configuration.Profile
 
+	enableAI bool
 	issues   map[string]*issue.Issue
 	table    table.Model
 	selected *issue.Issue
@@ -78,7 +79,7 @@ func (cmd Dash) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return cmd, tea.Quit
 		case "enter":
 			if cmd.selected != nil {
-				NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).RunWithIssue(cmd.selected, false)
+				NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).RunWithIssue(cmd.selected, cmd.enableAI)
 			}
 			return cmd, tea.Quit
 		case "o":
@@ -125,7 +126,8 @@ func (cmd Dash) View() string {
    Runner
 -----------------------*/
 
-func (cmd *Dash) Run(dashboardStatusFlag *string) {
+func (cmd *Dash) Run(dashboardStatusFlag *string, enableAI bool) {
+	cmd.enableAI = enableAI
 	if cmd.profile.Type == configuration.ProfileTypeJira && cmd.profile.Jira.Board == "" {
 		cmd.logger.Fatal("❌ %s\nYou can configure new dashboard with %s", "No dashboard configured", "gira config -p "+cmd.profile.Name)
 	}
@@ -187,7 +189,7 @@ func (cmd *Dash) Run(dashboardStatusFlag *string) {
 		case "branch":
 			if dash.selected != nil {
 				NewBranch(dash.logger, dash.tracker, dash.git, dash.branch).
-					Run(dash.selected.ID, true, false, false)
+					Run(dash.selected.ID, true, false, dash.enableAI)
 			}
 		}
 	}

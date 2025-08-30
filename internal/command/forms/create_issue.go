@@ -33,7 +33,7 @@ func (form CreateIssue) Ask(haveProject bool) *CreateIssueResult {
 	err := form.ui.Run()
 
 	if err != nil {
-		form.logger.Fatal("The operation was %s", "canceled")
+		form.logger.Fatal("❌ The operation was %s", "canceled")
 	}
 
 	form.ui.View()

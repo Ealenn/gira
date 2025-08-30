@@ -47,19 +47,19 @@ func (cmd Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force 
 				}))
 			}
 
-			generatedBranch = &forms.NewSelect(cmd.logger).Ask("Choose the branch name to create", "(You will be able to edit it afterwards)", branches...).Branch
+			generatedBranch = &forms.NewSelect(cmd.logger).Ask("🔎 Choose the branch name to create", "(You will be able to edit it afterwards)", branches...).Branch
 		}
 	}
 
 	if !force {
-		forms.NewEditBranch(cmd.logger).Ask("Edit", "", generatedBranch)
+		forms.NewEditBranch(cmd.logger).Ask("✒️ Tweak branch name before creating?", "", generatedBranch)
 	}
 
 	if cmd.git.IsBranchExist(generatedBranch.Raw) {
 		cmd.logger.Warn("⚠️ Branch named %s already exists", generatedBranch.Raw)
 
 		if !force {
-			if !forms.NewConfirm(cmd.logger).Ask("Would you like to switch to this branch?", generatedBranch.Raw, forms.TypeYesNo).Confirmed {
+			if !forms.NewConfirm(cmd.logger).Ask("♻️ Would you like to switch to this branch?", generatedBranch.Raw, forms.TypeYesNo).Confirmed {
 				cmd.logger.Fatal("The operation was %s", "canceled")
 			}
 		}
@@ -70,11 +70,11 @@ func (cmd Branch) RunWithIssue(issue *issue.Issue, assign bool, enableAI, force 
 
 	if !force {
 		if !forms.NewConfirm(cmd.logger).Ask(
-			"🌳 Would you like to create this branch?",
+			"🌳 Create this branch?",
 			generatedBranch.Raw,
 			forms.TypeConfirm,
 		).Confirmed {
-			cmd.logger.Fatal("The operation was %s", "canceled")
+			cmd.logger.Fatal("❌ The operation was %s", "canceled")
 		}
 	}
 

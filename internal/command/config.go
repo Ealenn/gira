@@ -52,7 +52,7 @@ func (cmd Config) Run(profileName string, list bool, remove bool) {
 	if remove {
 		if profileExist {
 			if !forms.NewConfirm(cmd.logger).Ask(fmt.Sprintf("Confirm deletion of profile : %s", profileName), fmt.Sprintf("The profile %s will be deleted", profileName), forms.TypeConfirm).Confirmed {
-				cmd.logger.Fatal("The operation was %s", "canceled")
+				cmd.logger.Fatal("❌ The operation was %s", "canceled")
 			}
 			if err := cmd.configuration.RemoveProfile(*cmd.profile); err != nil {
 				cmd.logger.Fatal("❌ Unable to save configuration")

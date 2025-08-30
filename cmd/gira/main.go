@@ -107,15 +107,17 @@ This helps enforce consistent naming conventions and improve traceability betwee
 		Use:   "dash [issue]",
 		Short: "Open your issue dashboard",
 		Long: `
-It's a quick way to get an overview of all issues : open, in-progress, or closed without needing to navigate manually.
+This command gives you a project-wide snapshot of your issues without leaving the terminal.
 
-Use it whenever you want to jump from the terminal to the broader issue tracker and see the full context of your work.`,
+It opens an interactive dashboard that lists issues by status (open, in-progress, or closed).
+
+This makes it easy to switch from working on a single issue to seeing the bigger picture of your team's progress.`,
 		Example: "  gira dash",
 		Aliases: []string{"dashboard"},
 		Args:    cobra.MinimumNArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
 			preRun(logger, configuration, version)
-			command.NewDashboard(logger, profile, tracker).Run(dashboardStatusFlag)
+			command.NewDashboard(logger, profile, tracker).Run(dashboardStatusFlag, enableAI)
 		},
 	}
 	dashboardStatusFlag = dashboardCommand.Flags().StringP("status", "s", "all", "filter issues by status")

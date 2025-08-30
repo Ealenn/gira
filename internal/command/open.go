@@ -32,6 +32,6 @@ func (cmd Open) Run(optionalIssueID *string) {
 	}
 
 	issue := cmd.tracker.GetIssue(issueID)
-	cmd.logger.Info("Open Issue %s : %s", issue.ID, issue.Title)
+	cmd.logger.Info("🌎 Open issue %s : %s", issue.ID, issue.Title)
 	browser.Open(issue.URL)
 }
