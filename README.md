@@ -23,6 +23,7 @@ Use Gira to speed up development workflows, reduce context switching, and stream
     - [AI-powered features](#ai-powered-features)
   - [🌱 `branch`: Create a new Git branch using issue ID (Jira or GitHub)](#-branch-create-a-new-git-branch-using-issue-id-jira-or-github)
   - [🕵️ `issue`: Show details of issue (from current branch or specified issue ID)](#️-issue-show-details-of-issue-from-current-branch-or-specified-issue-id)
+  - [📊 `dash`: Open your issue dashboard](#-dash-open-your-issue-dashboard)
   - [🌐 `open`: Open the issue in your browser](#-open-open-the-issue-in-your-browser)
   - [🥷 `ninja`: Create a new issue and branch in one go](#-ninja-create-a-new-issue-and-branch-in-one-go)
 
@@ -124,6 +125,7 @@ Available Commands:
   branch      Create a new Git branch using issue
   completion  Generate the autocompletion script for the specified shell
   config      Configure Gira with accounts and tokens
+  dash        Open your issue dashboard
   help        Help about any command
   issue       Show details of an issue (from current branch or specified issue ID)
   ninja       Create a new issue and associated branch in one command
@@ -164,21 +166,24 @@ For each profile, you'll specify the source type along with the necessary creden
 
 This configuration is stored in your local Gira config file and enables the CLI to communicate with the appropriate service when running commands like `branch` or `issue`.
 
+#### Usage <!-- omit in toc -->
+```
+Usage:
+  gira config [flags]
+
+Flags:
+  -l, --list     list all available profiles
+  -r, --remove   remove selected profile
+
+Global Flags:
+  -p, --profile string   configuration profile to use (default "default")
+```
+
 #### Default Profile
 
 Running `gira config` with no additional arguments will set up or update your **default** profile:
 
-```
-❯ gira config
-Use the arrow keys to navigate: ↓ ↑ → ← 
-? Type: 
-  ▸ JIRA
-    GITHUB
-
-Enter the Jira API URL : https://jira.mycompany.com
-Enter the Jira Token : **********
-✅ Done!
-```
+![](./.github/img/gira-config.png)
 
 #### Custom Profiles
 
@@ -186,12 +191,7 @@ You can also configure custom profiles and use them in any Gira command by speci
 
 This is useful if you need to work with multiple instances or accounts.
 
-```
-❯ gira config --profile perso
-Enter the Jira API URL : https://jira.personal.com
-Enter the Jira Token : **********
-✅ Done!
-```
+![](./.github/img/gira-config-perso.png)
 
 Once configured, you can specify the profile in other commands:
 
@@ -311,11 +311,11 @@ Flags:
 ```
 
 #### Example <!-- omit in toc -->
-```
-❯ gira branch ISSUE-123
-Branch feature/ISSUE-123/update-app-dependencies-to-the-latest-version will be generated
-Press ENTER to continue, CTRL+C to cancel
-```
+![](./.github/img/gira-branch.png)
+
+![](./.github/img/gira-branch-ai.png)
+
+![](./.github/img/gira-branch-done.png)
 
 ### 🕵️ `issue`: Show details of issue (from current branch or specified issue ID)
 
@@ -343,30 +343,31 @@ Flags:
 ```
 
 #### Example <!-- omit in toc -->
+
+![](./.github/img/gira-issue.png)
+
+### 📊 `dash`: Open your issue dashboard
+
+This command gives you a project-wide snapshot of your issues without leaving the terminal.
+
+It opens an interactive dashboard that lists issues by status (open, in-progress, or closed).
+
+This makes it easy to switch from working on a single issue to seeing the bigger picture of your team's progress.
+
+#### Usage <!-- omit in toc -->
 ```
-❯ gira issue
+Usage:
+  gira dash
 
-Issue: PROJ-457
-Summary: Fix 500 error when submitting user registration form
-Priority: High - Status: In Progress
-Assignee: Alice Martin <alice.martin@company.com>
-Description:
-
-Users receive a 500 Internal Server Error after submitting the registration form.
-The issue appears to be related to missing validation on the email field when the user already exists.
-
-Steps to reproduce:
-1. Go to /register
-2. Fill the form with an existing email
-3. Submit
-
-Expected: A validation message
-Actual: 500 error
-
-Refer to the backend error logs and the related ticket: DEVOPS-123.
-
-🔗 More: https://jira.company.com/browse/PROJ-457
+Flags:
+      --ai              enable AI-powered features
+  -s, --status string   filter issues by status (default "all")
+  -h, --help            help for issue
 ```
+
+#### Example <!-- omit in toc -->
+
+![](./.github/img/gira-dash.png)
 
 ### 🌐 `open`: Open the issue in your browser
 
@@ -390,12 +391,6 @@ Flags:
   -h, --help   help for issue
 ```
 
-#### Example <!-- omit in toc -->
-```
-❯ gira open
-🔗 Opening https://jira.company.com/browse/PROJ-457
-```
-
 ### 🥷 `ninja`: Create a new issue and branch in one go
 
 The `gira ninja` command speeds up your workflow by creating a new issue (in Jira or GitHub) and immediately generating a Git branch for it, all in a single step.
@@ -414,11 +409,5 @@ Flags:
 ```
 
 #### Example <!-- omit in toc -->
-```
-❯ gira ninja
 
-Use the arrow keys to navigate: ↓ ↑ → ← 
-? Type: 
-  ▸ FEATURE
-    BUG
-```
+![](./.github/img/gira-ninja.png)

@@ -1,5 +1,7 @@
 package issue
 
+import "time"
+
 type Type string
 
 const (
@@ -21,6 +23,7 @@ type Issue struct {
 	Types       []string
 	Assignees   []Assignee
 	URL         string
+	CreatedAt   time.Time
 }
 
 type CreateIssueOptions struct {
@@ -31,6 +34,7 @@ type CreateIssueOptions struct {
 }
 
 type Tracker interface {
+	SearchIssues(status string) map[string]*Issue
 	GetIssue(issueKeyID string) *Issue
 	CreateIssue(options CreateIssueOptions) *Issue
 	SelfAssignIssue(issueKeyID string) error

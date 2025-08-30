@@ -20,11 +20,10 @@ type Profile struct {
 }
 
 type Jira struct {
-	Host      string `json:"host,omitempty"`
-	Token     string `json:"token,omitempty"`
-	AccountID string `json:"accountID,omitempty"`
-	Email     string `json:"email,omitempty"`
-	UserKey   string `json:"userKey,omitempty"`
+	Host  string `json:"host,omitempty"`
+	Token string `json:"token,omitempty"`
+	Board string `json:"board,omitempty"`
+	JQL   string `json:"jql,omitempty"`
 }
 
 type Github struct {

@@ -5,11 +5,16 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Ealenn/gira/internal/configuration"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/log"
 
+	"github.com/ctreminiom/go-atlassian/v2/jira/agile"
 	v2 "github.com/ctreminiom/go-atlassian/v2/jira/v2"
 	"github.com/ctreminiom/go-atlassian/v2/pkg/infra/models"
 )
@@ -19,32 +24,59 @@ type JiraTracker struct {
 	profile    *configuration.Profile
 	git        *git.Git
 	jiraClient *v2.Client
+	agilClient *agile.Client
 }
 
 func NewJira(logger *log.Logger, profile *configuration.Profile, git *git.Git) *JiraTracker {
-	client, err := v2.New(&http.Client{
+	baseClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-	}, profile.Jira.Host)
+	}
 
+	client, err := v2.New(baseClient, profile.Jira.Host)
 	if err != nil {
 		logger.Debug("Jira client error: %v", err)
 		logger.Fatal("Unable to create Jira Client")
 	}
+	client.Auth.SetBearerToken(profile.Jira.Token)
 
-	if profile.Jira.Email != "" {
-		client.Auth.SetBasicAuth(profile.Jira.Email, profile.Jira.Token)
-	} else {
-		client.Auth.SetBearerToken(profile.Jira.Token)
+	agileClient, err := agile.New(baseClient, profile.Jira.Host)
+	if err != nil {
+		logger.Debug("Jira Agile client error: %v", err)
+		logger.Fatal("Unable to create Jira Agile Client")
 	}
+	agileClient.Auth.SetBearerToken(profile.Jira.Token)
 
 	return &JiraTracker{
 		logger:     logger,
 		profile:    profile,
 		git:        git,
 		jiraClient: client,
+		agilClient: agileClient,
 	}
+}
+
+func (tracker *JiraTracker) SearchIssues(status string) map[string]*Issue {
+	boardID, _ := strconv.Atoi(tracker.profile.Jira.Board)
+	issue, issueResponse, err := tracker.agilClient.Board.Issues(context.Background(), boardID, &models.IssueOptionScheme{
+		JQL: tracker.profile.Jira.JQL,
+	}, 0, 100)
+
+	if err != nil {
+		tracker.logger.Debug("Search issues error : %s", err)
+		tracker.logger.Debug("Search issues response status %s", issueResponse.Status)
+		tracker.logger.Fatal("❌ Unable to search issues")
+	}
+
+	filteredIssues := make(map[string]*Issue)
+	for _, issue := range issue.Issues {
+		if strings.EqualFold(status, "all") || strings.EqualFold(status, issue.Fields.Status.Name) {
+			filteredIssues[issue.Key] = tracker.formatIssue(issue)
+		}
+	}
+
+	return filteredIssues
 }
 
 func (tracker *JiraTracker) GetIssue(issueKeyID string) *Issue {
@@ -93,9 +125,14 @@ func (tracker *JiraTracker) GetMyself() (*models.UserScheme, error) {
 func (tracker *JiraTracker) SelfAssignIssue(issueKeyID string) error {
 	ctx := context.Background()
 
+	user, getMyselfErr := tracker.GetMyself()
+	if getMyselfErr != nil {
+		return getMyselfErr
+	}
+
 	// For Jira Cloud, use AccountID
-	if tracker.profile.Jira.AccountID != "" {
-		_, err := tracker.jiraClient.Issue.Assign(ctx, issueKeyID, tracker.profile.Jira.AccountID)
+	if user.AccountID != "" {
+		_, err := tracker.jiraClient.Issue.Assign(ctx, issueKeyID, user.AccountID)
 		return err
 	}
 
@@ -103,8 +140,8 @@ func (tracker *JiraTracker) SelfAssignIssue(issueKeyID string) error {
 	_, err := tracker.jiraClient.Issue.Update(ctx, issueKeyID, true, &models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
 			Assignee: &models.UserScheme{
-				Key:  tracker.profile.Jira.UserKey,
-				Name: tracker.profile.Jira.UserKey,
+				Key:  user.Key,
+				Name: user.Key,
 			},
 		},
 	}, nil, nil)
@@ -125,10 +162,17 @@ func (tracker *JiraTracker) formatIssue(issue *models.IssueSchemeV2) *Issue {
 	return &Issue{
 		ID:          issue.Key,
 		Title:       issue.Fields.Summary,
-		Description: issue.Fields.Description,
+		Description: tracker.toMarkdown(issue.Fields.Description),
 		Status:      issue.Fields.Status.Name,
 		Types:       []string{issue.Fields.IssueType.Name},
 		URL:         fmt.Sprintf("%s%s%s", tracker.profile.Jira.Host, "/browse/", issue.Key),
 		Assignees:   assignees,
+		CreatedAt:   time.Time(*issue.Fields.Created),
 	}
+}
+
+func (tracker *JiraTracker) toMarkdown(content string) string {
+	content = regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(content, "$1 $2")
+	content = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(content, "$1")
+	return content
 }

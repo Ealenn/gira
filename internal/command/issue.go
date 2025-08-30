@@ -1,13 +1,19 @@
 package command
 
 import (
-	"regexp"
+	"fmt"
+	"time"
 
 	"github.com/Ealenn/gira/internal/ai"
 	"github.com/Ealenn/gira/internal/branch"
 	"github.com/Ealenn/gira/internal/git"
 	"github.com/Ealenn/gira/internal/issue"
 	"github.com/Ealenn/gira/internal/log"
+
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Issue struct {
@@ -15,51 +21,216 @@ type Issue struct {
 	tracker issue.Tracker
 	git     *git.Git
 	branch  *branch.Manager
+
+	action string
+	width  int
+	height int
+
+	focus                    string
+	componentAttributes      viewport.Model
+	componentAttributesValue string
+	componentContent         viewport.Model
+	componentContentValue    string
 }
 
 func NewIssue(logger *log.Logger, tracker issue.Tracker, git *git.Git, branch *branch.Manager) *Issue {
 	return &Issue{
-		logger,
-		tracker,
-		git,
-		branch,
+		logger:              logger,
+		tracker:             tracker,
+		git:                 git,
+		branch:              branch,
+		componentAttributes: viewport.New(0, 0),
+		componentContent:    viewport.New(0, 0),
 	}
 }
 
-func (command Issue) Run(optionalIssueID *string, enableAI bool) {
-	var issueID string
+func (cmd *Issue) Init() tea.Cmd {
+	return nil
+}
 
-	if optionalIssueID != nil {
-		issueID = *optionalIssueID
-	} else {
-		issueID = command.branch.GetCurrentBranch().IssueID
-	}
+func (cmd *Issue) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var teacmd tea.Cmd
 
-	issue := command.tracker.GetIssue(issueID)
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		cmd.width = msg.Width
+		cmd.height = msg.Height
+		cmd.renderComponents()
 
-	command.logger.Log("%s: %s", log.InfoStyle.Render("Summary"), issue.Title)
-	command.logger.Log("%s: %s - %s: %s", log.InfoStyle.Render("Type"), issue.Types, log.InfoStyle.Render("State"), issue.Status)
-	for _, assignee := range issue.Assignees {
-		command.logger.Log("%s: %s <%s>", log.InfoStyle.Render("Assignee"), assignee.Name, assignee.Email)
-	}
+	case tea.MouseMsg:
+		if msg.Action == tea.MouseActionPress {
+			if msg.X < cmd.componentAttributes.Width+2 {
+				cmd.focus = "attributes"
+			} else {
+				cmd.focus = "content"
+			}
+		}
 
-	description := regexp.MustCompile(`\[(.*?)\|(.*?)\]`).ReplaceAllString(issue.Description, "$1 $2")
-	description = regexp.MustCompile(`\[(.*?)\]`).ReplaceAllString(description, "$1")
-	command.logger.Log("%s: \n%s", log.InfoStyle.Render("Description"), description)
-
-	if enableAI {
-		agent := ai.NewOpenAI(command.logger)
-		response, err := agent.IssueSummary(issue)
-
-		if err == nil {
-			command.logger.Log("--------------------------------------------------------------")
-			command.logger.Info("%s", "AI Quick summary:")
-			command.logger.Log("%s", response)
-			command.logger.Log("--------------------------------------------------------------")
-		} else {
-			command.logger.Debug("Unable to generate summary due to %v", err)
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "esc", "q":
+			cmd.action = "quit"
+			return cmd, tea.Quit
+		case "o":
+			cmd.action = "open"
+			return cmd, tea.Quit
+		case "a":
+			cmd.action = "assign"
+			return cmd, tea.Quit
+		case "b":
+			cmd.action = "branch"
+			return cmd, tea.Quit
 		}
 	}
 
-	command.logger.Info("\n🔗 More %s", issue.URL)
+	cmd.componentAttributes.Update(msg)
+	cmd.componentContent.Update(msg)
+
+	switch cmd.focus {
+	case "attributes":
+		cmd.componentAttributes, teacmd = cmd.componentAttributes.Update(msg)
+	case "content":
+		cmd.componentContent, teacmd = cmd.componentContent.Update(msg)
+	}
+
+	return cmd, teacmd
+}
+
+func (cmd *Issue) View() string {
+	if cmd.action != "" {
+		return ""
+	}
+
+	mainHeight := max(cmd.height-3, 3)
+
+	// Styles
+	attributesStyle := lipgloss.NewStyle().
+		Width(cmd.componentAttributes.Width).
+		Height(cmd.componentAttributes.Height + 2).
+		Border(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("35"))
+
+	contentStyle := lipgloss.NewStyle().
+		Width(cmd.componentContent.Width - 2).
+		Height(mainHeight).
+		Border(lipgloss.ThickBorder()).
+		BorderForeground(lipgloss.Color("35"))
+
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("241")).
+		Background(lipgloss.Color("235")).
+		Height(1).
+		Width(cmd.width).
+		Align(lipgloss.Center)
+
+	// Focus
+	switch cmd.focus {
+	case "attributes":
+		attributesStyle = attributesStyle.Border(lipgloss.DoubleBorder())
+	case "content":
+		contentStyle = contentStyle.Border(lipgloss.DoubleBorder())
+	}
+
+	// Render boxes
+	leftBox := lipgloss.JoinVertical(
+		lipgloss.Left,
+		attributesStyle.Render(cmd.componentAttributes.View()),
+	)
+	leftBox = lipgloss.NewStyle().
+		Height(mainHeight).
+		Render(leftBox)
+
+	rightBox := contentStyle.Render(cmd.componentContent.View())
+	mainContent := lipgloss.JoinHorizontal(lipgloss.Top, leftBox, rightBox)
+
+	helpBar := helpStyle.Render("ESC/Q Quit | ↑/↓ Scroll | a Assign | b Branch | o Open")
+	return lipgloss.JoinVertical(lipgloss.Left, mainContent, helpBar)
+}
+
+/*
+	----------------------
+	  Runner
+
+-----------------------
+*/
+func (cmd *Issue) RunWithIssue(issue *issue.Issue, enableAI bool) {
+	cmd.componentContentValue = fmt.Sprintf("# %s\n\r\n\r%s", issue.Title, issue.Description)
+	if enableAI {
+		agent := ai.NewOpenAI(cmd.logger)
+		response, err := agent.IssueSummary(issue)
+
+		if err == nil {
+			cmd.componentContentValue = fmt.Sprintf("# %s\n> 🤖 %s\n\r\n\r---\n\r\n\r%s", issue.Title, response, issue.Description)
+		}
+	}
+
+	cmd.componentAttributesValue = fmt.Sprintf("> #%s\n\nStatus: %s\n\n", issue.ID, issue.Status)
+	cmd.componentAttributesValue += "\n> Types \n\n"
+	for _, tag := range issue.Types {
+		cmd.componentAttributesValue += fmt.Sprintf("- %s\n\n", tag)
+	}
+	cmd.componentAttributesValue += "\n> Assignees\n\n"
+	for _, assignee := range issue.Assignees {
+		cmd.componentAttributesValue += fmt.Sprintf("- [%s](%s) \n\n", assignee.Name, assignee.Email)
+	}
+
+	cmd.componentAttributesValue += fmt.Sprintf("\n\n%s", issue.CreatedAt.Format(time.RFC822))
+
+	p := tea.NewProgram(cmd,
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
+
+	if _, err := p.Run(); err != nil {
+		cmd.logger.Fatal("Gira fatal exception : %v", err)
+	}
+
+	switch cmd.action {
+	case "open":
+		NewOpen(cmd.logger, cmd.branch, cmd.tracker).Run(&issue.ID)
+	case "assign":
+		cmd.tracker.SelfAssignIssue(issue.ID)
+		NewIssue(cmd.logger, cmd.tracker, cmd.git, cmd.branch).RunWithIssue(issue, enableAI)
+	case "branch":
+		NewBranch(cmd.logger, cmd.tracker, cmd.git, cmd.branch).Run(issue.ID, false, enableAI, false)
+	}
+}
+
+func (cmd *Issue) Run(optionalIssueID *string, enableAI bool) {
+	var issueID string
+	if optionalIssueID != nil {
+		issueID = *optionalIssueID
+	} else {
+		issueID = cmd.branch.GetCurrentBranch().IssueID
+	}
+	issue := cmd.tracker.GetIssue(issueID)
+
+	cmd.RunWithIssue(issue, enableAI)
+}
+
+func (cmd *Issue) renderComponents() {
+	mainHeight := max(cmd.height-3, 3)
+
+	cmd.componentAttributes.Width = 25
+	cmd.componentAttributes.Height = (mainHeight) - 2
+
+	cmd.componentContent.Width = max(cmd.width-25-2, 30)
+	cmd.componentContent.Height = mainHeight
+
+	cmd.componentAttributes.SetContent(cmd.renderMarkdown(cmd.componentAttributesValue, cmd.componentAttributes.Width))
+	cmd.componentContent.SetContent(cmd.renderMarkdown(cmd.componentContentValue, cmd.componentContent.Width))
+
+	cmd.Update(nil)
+	cmd.View()
+}
+
+func (cmd *Issue) renderMarkdown(markdown string, wrap int) string {
+	renderer, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(wrap),
+		glamour.WithEmoji(),
+	)
+	out, _ := renderer.Render(markdown)
+
+	return out
 }
