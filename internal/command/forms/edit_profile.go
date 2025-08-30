@@ -31,7 +31,7 @@ func (form EditProfile) Ask(profile *configuration.Profile) {
 	profileFormErr := form.ui.Run()
 
 	if profileFormErr != nil {
-		form.logger.Fatal("The operation was %s", "canceled")
+		form.logger.Fatal("❌ The operation was %s", "canceled")
 	}
 
 	form.ui.View()
@@ -43,7 +43,7 @@ func (form EditProfile) Ask(profile *configuration.Profile) {
 	accountFormErr := form.ui.Run()
 
 	if accountFormErr != nil {
-		form.logger.Fatal("The operation was %s", "canceled")
+		form.logger.Fatal("❌ The operation was %s", "canceled")
 	}
 
 	form.ui.View()

@@ -32,7 +32,7 @@ func (form EditBranch) Ask(title string, description string, branch *branch.Bran
 	err := form.ui.Run()
 
 	if err != nil {
-		form.logger.Fatal("The operation was %s", "canceled")
+		form.logger.Fatal("❌ The operation was %s", "canceled")
 	}
 
 	form.ui.View()
