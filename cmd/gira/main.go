@@ -104,7 +104,7 @@ This helps enforce consistent naming conventions and improve traceability betwee
 	 */
 	var dashboardStatusFlag *string
 	var dashboardCommand = &cobra.Command{
-		Use:   "dash [issue]",
+		Use:   "dash",
 		Short: "Open your issue dashboard",
 		Long: `
 This command gives you a project-wide snapshot of your issues without leaving the terminal.
